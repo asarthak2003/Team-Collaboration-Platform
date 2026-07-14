@@ -38,6 +38,7 @@ public class TaskService {
 
     private TaskResponse mapToResponse(Task task) {
         Long assignedId = task.getAssignedUser() != null ? task.getAssignedUser().getId() : null;
+        String assigneeName = task.getAssignedUser() != null ? task.getAssignedUser().getName() : null;
         return new TaskResponse(task.getId(), task.getTitle(), task.getDescription(), task.getStatus().name(),
                 task.getPriority().name(), task.getProject().getId(), task.getProject().getName(), assignedId,
                 assigneeName, task.getDueDate(), task.getCreatedBy().getId(), task.getCreatedBy().getName(),
@@ -48,7 +49,7 @@ public class TaskService {
     public TaskResponse createTask(TaskRequest request, String userEmail) {
         User creator = validateAdmin(userEmail);
         Project project = projectRepository.findByIdAndDeletedFalse(
-                request.getProjectId().orElseThrow(() -> new RuntimeException("Project not found or deleted")));
+                request.getProjectId()).orElseThrow(() -> new RuntimeException("Project not found or deleted")));
 
         Task task = new Task();
         task.setTitle(request.getTitle());
