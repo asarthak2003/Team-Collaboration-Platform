@@ -3,8 +3,6 @@ package com.sarthak.teamcollab.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.management.RuntimeErrorException;
-
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,9 +28,9 @@ public class CommentService {
         this.userRepository = userRepository;
     }
 
-    private CommentResponse mapToResponse (Comment comment){
-        return new CommentResponse(comment.getId()comment.getTask().getId(), comment.getUser().getId(), comment.getUser().getName(), comment.getContent(), comment.getCreatedAt(), comment.getUpdatedAt()
-        );
+    private CommentResponse mapToResponse(Comment comment) {
+        return new CommentResponse(comment.getId(), comment.getTask().getId(), comment.getUser().getId(),
+                comment.getUser().getName(), comment.getContent(), comment.getCreatedAt(), comment.getUpdatedAt());
     }
 
     @Transactional
