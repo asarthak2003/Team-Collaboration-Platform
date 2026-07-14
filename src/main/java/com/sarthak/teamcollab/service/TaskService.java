@@ -30,10 +30,10 @@ public class TaskService {
         this.userRepository = userRepository;
     }
 
-    private User validateAdmin(String email){
-        User user - userRepository.findByEmail(email).orElse(() -> new RuntimeException("User Not Found"));
+    private User validateAdmin(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User Not Found"));
         String role = user.getRole().getName();
-        if(!"ROLE_ADMIN".equals(role)){
+        if (!"ROLE_ADMIN".equals(role)) {
             throw new RuntimeException("Access denied: Only Admin can perform this action");
         }
         return user;
@@ -51,8 +51,8 @@ public class TaskService {
     @Transactional
     public TaskResponse createTask(TaskRequest request, String userEmail) {
         User creator = validateAdmin(userEmail);
-        Project project = projectRepository.findByIdAndDeletedFalse(
-                request.getProjectId()).orElseThrow(() -> new RuntimeException("Project not found or deleted")));
+        Project project = projectRepository.findByIdAndDeletedFalse(request.getProjectId())
+                .orElseThrow(() -> new RuntimeException("Project not found or deleted"));
 
         Task task = new Task();
         task.setTitle(request.getTitle());
@@ -117,7 +117,7 @@ public class TaskService {
     @Transactional
     public TaskResponse assignTask(Long id, Long userId, String userEmail) {
         validateAdmin(userEmail);
-        Task task = taskRepository.findByAssignedUserIdAndDeletedFalse(id)
+        Task task = taskRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Task not found or deleted"));
         User assignee = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("Assignee user not found"));
@@ -130,7 +130,7 @@ public class TaskService {
     @Transactional
     public TaskResponse deleteTask(Long id, String userEmail) {
         validateAdmin(userEmail);
-        Task task = taskRepository.findByAssignedUserIdAndDeletedFalse(id)
+        Task task = taskRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Task not found or already deleted"));
         task.setDeleted(true);
         Task saved = taskRepository.save(task);
