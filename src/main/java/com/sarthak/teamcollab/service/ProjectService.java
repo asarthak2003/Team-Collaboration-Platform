@@ -1,0 +1,121 @@
+package com.sarthak.teamcollab.service;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
+import com.sarthak.teamcollab.dto.ProjectRequest;
+import com.sarthak.teamcollab.dto.ProjectResponse;
+import com.sarthak.teamcollab.model.Project;
+import com.sarthak.teamcollab.model.User;
+import com.sarthak.teamcollab.repository.ProjectRepository;
+import com.sarthak.teamcollab.repository.UserRepository;
+
+import jakarta.transaction.Transactional;
+
+@Service
+public class ProjectService {
+    private final ProjectRepository projectRepository;
+    private final UserRepository userRepository;
+
+    public ProjectService(ProjectRepository projectRepository, UserRepository userRepository) {
+        this.projectRepository = projectRepository;
+        this.userRepository = userRepository;
+    }
+
+    private User validateAdmin(String email) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        if (!"ROLE_ADMIN".equals(user.getRole().getName())) {
+            throw new RuntimeException("ACCESS DENIED: Only ADMINS can perform this action.");
+        }
+        return user;
+    }
+
+    private ProjectResponse mapToResponse(Project project) {
+        return new ProjectResponse(
+                project.getId(),
+                project.getName(),
+                project.getDescription(),
+                project.getStatus(),
+                project.getCreatedBy().getId(),
+                project.getCreatedBy().getName(),
+                project.getCreatedAt(),
+                project.getUpdatedAt(),
+                project.isDeleted());
+    }
+
+    @Transactional
+    public ProjectResponse createProject(ProjectRequest request, String userEmail) {
+        User admin = validateAdmin(userEmail);
+        Project project = new Project();
+        project.setName(request.getName());
+        project.setDescription(request.getDescription());
+        if (request.getStatus() != null && !request.getStatus().isBlank()) {
+            project.setStatus(request.getStatus());
+        }
+        project.setCreatedBy(admin);
+        Project saved = projectRepository.save(project);
+        return mapToResponse(saved);
+    }
+
+    @Transactional
+    public ProjectResponse updateProject(Long id, ProjectRequest request, String userEmail) {
+        validateAdmin(userEmail);
+        Project project = projectRepository.findByIdAndDeletedFalse(id)
+                .orElseThrow(() -> new RuntimeException("Project not found or deleted"));
+        project.setName(request.getName());
+        project.setDescription(request.getDescription());
+        if (request.getStatus() != null && !request.getStatus().isBlank()) {
+            project.setStatus(request.getStatus());
+        }
+        Project updated = projectRepository.save(project);
+        return mapToResponse(updated);
+    }
+
+    @Transactional
+    public ProjectResponse deleteProject(Long id, String userEmail) {
+        validateAdmin(userEmail);
+        Project project = projectRepository.findByIdAndDeletedFalse(id)
+                .orElseThrow(() -> new RuntimeException("Project not found or already deleted"));
+        project.setDeleted(true);
+        Project saved = projectRepository.save(project);
+        return mapToResponse(saved);
+    }
+
+    @Transactional
+    public ProjectResponse restoreProject(Long id, String userEmail) {
+        validateAdmin(userEmail);
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
+        if (!project.isDeleted()) {
+            throw new RuntimeException("Project is not deleted");
+        }
+        project.setDeleted(false);
+        Project saved = projectRepository.save(project);
+        return mapToResponse(saved);
+    }
+
+    @Transactional
+    public ProjectResponse archiveProject(Long id, String userEmail) {
+        validateAdmin(userEmail);
+        Project project = projectRepository.findByIdAndDeletedFalse(id)
+                .orElseThrow(() -> new RuntimeException("Project not found or deleted"));
+        project.setStatus("ARCHIVED");
+        Project saved = projectRepository.save(project);
+        return mapToResponse(saved);
+    }
+
+    public ProjectResponse getProjectById(Long id) {
+        Project project = projectRepository.findByIdAndDeletedFalse(id)
+                .orElseThrow(() -> new RuntimeException("Project not found or deleted"));
+        return mapToResponse(project);
+    }
+
+    public List<ProjectResponse> getAllActiveProjects() {
+        return projectRepository.findByDeletedFalse().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+}

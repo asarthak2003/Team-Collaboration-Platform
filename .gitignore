@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Git Auto-Commit Script
+git-autocommit.ps1
