@@ -110,6 +110,18 @@ public class TaskService {
         Task saved = taskRepository.save(task);
         return mapToResponse(saved);
 
-        @Transactional
+    @Transactional
+    public TaskResponse assignTask(Long id, Long userId, String userEmail) {
+        validateAdmin(userEmail);
+        Task task = taskRepository.findByIdAndDeletedFalse(id)
+                .orElseThrow(() -> new RuntimeException("Task not found or deleted"));
+        User assignee = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Assignee user not found"));
+        task.setAssignedUser(assignee);
+        Task saved = taskRepository.save(task);
+        return mapToResponse(saved);
+    }
+
+
     }
 }
