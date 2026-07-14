@@ -1,12 +1,19 @@
 package com.sarthak.teamcollab.controller;
 
-import org.springframework.web.bind.annotation.RestController;
-
+import com.sarthak.teamcollab.dto.TaskRequest;
+import com.sarthak.teamcollab.dto.TaskResponse;
+import com.sarthak.teamcollab.model.User;
 import com.sarthak.teamcollab.repository.UserRepository;
 import com.sarthak.teamcollab.service.TaskService;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
+@RequestMapping("/api/tasks")
 public class TaskController {
+
     private final TaskService taskService;
     private final UserRepository userRepository;
 
@@ -15,4 +22,86 @@ public class TaskController {
         this.userRepository = userRepository;
     }
 
+    @PostMapping
+    public ResponseEntity<?> createTask(
+            @Valid @RequestBody TaskRequest request,
+            @RequestHeader("X-User-Email") String userEmail) {
+        try {
+            TaskResponse response = taskService.createTask(request, userEmail);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new AuthController.ErrorResponse(e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateTask(
+            @PathVariable Long id,
+            @Valid @RequestBody TaskRequest request,
+            @RequestHeader("X-User-Email") String userEmail) {
+        try {
+            TaskResponse response = taskService.updateTask(id, request, userEmail);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new AuthController.ErrorResponse(e.getMessage()));
+        }
+    }
+
+    @PostMapping("/{id}/assign/{userId}")
+    public ResponseEntity<?> assignTask(
+            @PathVariable Long id,
+            @PathVariable Long userId,
+            @RequestHeader("X-User-Email") String userEmail) {
+        try {
+            TaskResponse response = taskService.assignTask(id, userId, userEmail);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new AuthController.ErrorResponse(e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteTask(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Email") String userEmail) {
+        try {
+            TaskResponse response = taskService.deleteTask(id, userEmail);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new AuthController.ErrorResponse(e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{id}/restore")
+    public ResponseEntity<?> restoreTask(
+            @PathVariable Long id,
+            @RequestHeader("X-User-Email") String userEmail) {
+        try {
+            TaskResponse response = taskService.restoreTask(id, userEmail);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new AuthController.ErrorResponse(e.getMessage()));
+        }
+    }
+
+    @GetMapping("/project/{projectId}")
+    public ResponseEntity<List<TaskResponse>> getTasksByProject(@PathVariable Long projectId) {
+        return ResponseEntity.ok(taskService.getTasksByProject(projectId));
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<List<TaskResponse>> getTasksAssignedToUser(@PathVariable Long userId) {
+        return ResponseEntity.ok(taskService.getTasksAssignedToUser(userId));
+    }
+
+    @GetMapping("/my-tasks")
+    public ResponseEntity<?> getMyTasks(@RequestHeader("X-User-Email") String userEmail) {
+        try {
+            User user = userRepository.findByEmail(userEmail)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            return ResponseEntity.ok(taskService.getTasksAssignedToUser(user.getId()));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new AuthController.ErrorResponse(e.getMessage()));
+        }
+    }
 }
