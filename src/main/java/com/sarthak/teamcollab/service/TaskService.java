@@ -1,5 +1,8 @@
 package com.sarthak.teamcollab.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -109,28 +112,52 @@ public class TaskService {
         }
         Task saved = taskRepository.save(task);
         return mapToResponse(saved);
+    }
 
-        @Transactional
-        public TaskResponse assignTask (Long id, Long userId, String userEmail){
-            validateAdmin(userEmail);
-            Task task = taskRepository.findByAssignedUserIdAndDeletedFalse(id).orElseThrow(() -> new RuntimeException("Task not found or deleted"));
-            User assignee = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Assignee user not found"));
+    @Transactional
+    public TaskResponse assignTask(Long id, Long userId, String userEmail) {
+        validateAdmin(userEmail);
+        Task task = taskRepository.findByAssignedUserIdAndDeletedFalse(id)
+                .orElseThrow(() -> new RuntimeException("Task not found or deleted"));
+        User assignee = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Assignee user not found"));
 
-            task.setAssignedUser(assignee);
-            Task saved = taskRepository.save(task);
-            return mapToResponse(task);
+        task.setAssignedUser(assignee);
+        Task saved = taskRepository.save(task);
+        return mapToResponse(task);
+    }
+
+    @Transactional
+    public TaskResponse deleteTask(Long id, String userEmail) {
+        validateAdmin(userEmail);
+        Task task = taskRepository.findByAssignedUserIdAndDeletedFalse(id)
+                .orElseThrow(() -> new RuntimeException("Task not found or already deleted"));
+        task.setDeleted(true);
+        Task saved = taskRepository.save(task);
+        return mapToResponse(saved);
+    }
+
+    @Transactional
+    public TaskResponse restoreTask(Long id, String userEmail) {
+        validateAdmin(userEmail);
+        Task task = taskRepository.findById(id).orElseThrow(() -> new RuntimeException("Task not found"));
+        if (!task.isDeleted()) {
+            throw new RuntimeException("Task is not deleted");
         }
-        
-        @Transactional
-        public TaskResponse deleteTask (Long id, String userEmail){
-            validateAdmin(userEmail);
-            Task task = taskRepository.findByAssignedUserIdAndDeletedFalse(id).orElseThrow(() -> new RuntimeException("Task not found or already deleted"));
-            task.setDeleted(true);
-            Task saved = taskRepository.save(task);
-            return mapToResponse(saved);
-        }
+        task.setDeleted(false);
+        Task saved = taskRepository.save(task);
+        return mapToResponse(saved);
+    }
 
-        @Transactional
-        
+    public List<TaskResponse> getTasksByProject(Long projectId) {
+        return taskRepository.findByProjectIdAndDeletedFalse(projectId).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<TaskResponse> getTasksAssignedToUser(Long userId) {
+        return taskRepository.findByAssignedUserIdAndDeletedFalse(userId).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 }
