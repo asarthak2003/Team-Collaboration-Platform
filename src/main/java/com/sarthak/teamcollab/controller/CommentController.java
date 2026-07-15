@@ -1,5 +1,6 @@
 package com.sarthak.teamcollab.controller;
 
+import java.security.Principal;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -30,8 +31,9 @@ public class CommentController {
 
     @PostMapping("/tasks/{taskId}/comments")
     public ResponseEntity<?> addComment(@PathVariable Long taskId, @Valid @RequestBody CommentRequest request,
-            @RequestHeader("X-User-Email") String userEmail) {
+            Principal principal) {
         try {
+            String userEmail = principal.getName();
             CommentResponse response = commentService.addcomment(taskId, request, userEmail);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
@@ -51,8 +53,9 @@ public class CommentController {
 
     @PutMapping("/comments/{id}")
     public ResponseEntity<?> editComment(@PathVariable Long id, @Valid @RequestBody CommentRequest request,
-            @RequestHeader("X-User-Email") String userEmail) {
+            Principal principal) {
         try {
+            String userEmail = principal.getName();
             CommentResponse response = commentService.editComment(id, request, userEmail);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
@@ -61,8 +64,9 @@ public class CommentController {
     }
 
     @DeleteMapping("/comments/{id}")
-    public ResponseEntity<?> deleteComment(@PathVariable Long id, @RequestHeader("X-User-Email") String userEmail) {
+    public ResponseEntity<?> deleteComment(@PathVariable Long id, Principal principal) {
         try {
+            String userEmail = principal.getName();
             commentService.deleteComment(id, userEmail);
             return ResponseEntity.ok(new AuthController.ErrorResponse("Comment deleted successfully"));
         } catch (RuntimeException e) {
