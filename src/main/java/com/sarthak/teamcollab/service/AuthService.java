@@ -4,6 +4,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.sarthak.teamcollab.config.JwtTokenProvider;
 import com.sarthak.teamcollab.dto.AuthResponse;
 import com.sarthak.teamcollab.dto.LoginRequest;
 import com.sarthak.teamcollab.dto.RegisterRequest;
@@ -17,12 +18,14 @@ public class AuthService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
 
     public AuthService(UserRepository userRepository, RoleRepository roleRepository,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider) {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     @Transactional
@@ -46,8 +49,9 @@ public class AuthService {
         user.setRole(role);
 
         User savedUser = userRepository.save(user);
+        String token = jwtTokenProvider.generateToken(savedUser.getEmail(), savedUser.getRole().getName());
         return new AuthResponse(savedUser.getId(), savedUser.getName(), savedUser.getEmail(),
-                savedUser.getRole().getName(), "Registration successful");
+                savedUser.getRole().getName(), "Registration successful", token);
     }
 
     public AuthResponse loginUser(LoginRequest request) {
@@ -56,11 +60,12 @@ public class AuthService {
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Invalid email or password");
         }
+        String token = jwtTokenProvider.generateToken(user.getEmail(), user.getRole().getName());
         return new AuthResponse(
                 user.getId(),
                 user.getName(),
                 user.getEmail(),
                 user.getRole().getName(),
-                "Login successful");
+                "Login successful", token);
     }
 }
