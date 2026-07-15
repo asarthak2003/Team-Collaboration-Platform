@@ -6,6 +6,8 @@ import com.sarthak.teamcollab.service.ProjectService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -21,8 +23,9 @@ public class ProjectController {
     @PostMapping
     public ResponseEntity<?> createProject(
             @Valid @RequestBody ProjectRequest request,
-            @RequestHeader("X-User-Email") String userEmail) {
+            Principal principal) {
         try {
+            String userEmail = principal.getName();
             ProjectResponse response = projectService.createProject(request, userEmail);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
@@ -34,8 +37,9 @@ public class ProjectController {
     public ResponseEntity<?> updateProject(
             @PathVariable Long id,
             @Valid @RequestBody ProjectRequest request,
-            @RequestHeader("X-User-Email") String userEmail) {
+            Principal principal) {
         try {
+            String userEmail = principal.getName();
             ProjectResponse response = projectService.updateProject(id, request, userEmail);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
@@ -46,8 +50,9 @@ public class ProjectController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteProject(
             @PathVariable Long id,
-            @RequestHeader("X-User-Email") String userEmail) {
+            Principal principal) {
         try {
+            String userEmail = principal.getName();
             ProjectResponse response = projectService.deleteProject(id, userEmail);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
@@ -58,8 +63,9 @@ public class ProjectController {
     @PutMapping("/{id}/restore")
     public ResponseEntity<?> restoreProject(
             @PathVariable Long id,
-            @RequestHeader("X-User-Email") String userEmail) {
+            Principal principal) {
         try {
+            String userEmail = principal.getName();
             ProjectResponse response = projectService.restoreProject(id, userEmail);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
@@ -70,8 +76,9 @@ public class ProjectController {
     @PutMapping("/{id}/archive")
     public ResponseEntity<?> archiveProject(
             @PathVariable Long id,
-            @RequestHeader("X-User-Email") String userEmail) {
+            Principal principal) {
         try {
+            String userEmail = principal.getName();
             ProjectResponse response = projectService.archiveProject(id, userEmail);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {

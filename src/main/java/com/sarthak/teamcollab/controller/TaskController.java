@@ -8,6 +8,8 @@ import com.sarthak.teamcollab.service.TaskService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -25,8 +27,9 @@ public class TaskController {
     @PostMapping
     public ResponseEntity<?> createTask(
             @Valid @RequestBody TaskRequest request,
-            @RequestHeader("X-User-Email") String userEmail) {
+            Principal principal) {
         try {
+            String userEmail = principal.getName();
             TaskResponse response = taskService.createTask(request, userEmail);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
@@ -38,8 +41,9 @@ public class TaskController {
     public ResponseEntity<?> updateTask(
             @PathVariable Long id,
             @Valid @RequestBody TaskRequest request,
-            @RequestHeader("X-User-Email") String userEmail) {
+            Principal principal) {
         try {
+            String userEmail = principal.getName();
             TaskResponse response = taskService.updateTask(id, request, userEmail);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
@@ -51,8 +55,9 @@ public class TaskController {
     public ResponseEntity<?> assignTask(
             @PathVariable Long id,
             @PathVariable Long userId,
-            @RequestHeader("X-User-Email") String userEmail) {
+            Principal principal) {
         try {
+            String userEmail = principal.getName();
             TaskResponse response = taskService.assignTask(id, userId, userEmail);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
@@ -63,8 +68,9 @@ public class TaskController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteTask(
             @PathVariable Long id,
-            @RequestHeader("X-User-Email") String userEmail) {
+            Principal principal) {
         try {
+            String userEmail = principal.getName();
             TaskResponse response = taskService.deleteTask(id, userEmail);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
@@ -75,8 +81,9 @@ public class TaskController {
     @PutMapping("/{id}/restore")
     public ResponseEntity<?> restoreTask(
             @PathVariable Long id,
-            @RequestHeader("X-User-Email") String userEmail) {
+            Principal principal) {
         try {
+            String userEmail = principal.getName();
             TaskResponse response = taskService.restoreTask(id, userEmail);
             return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
@@ -95,8 +102,9 @@ public class TaskController {
     }
 
     @GetMapping("/my-tasks")
-    public ResponseEntity<?> getMyTasks(@RequestHeader("X-User-Email") String userEmail) {
+    public ResponseEntity<?> getMyTasks(Principal principal) {
         try {
+            String userEmail = principal.getName();
             User user = userRepository.findByEmail(userEmail)
                     .orElseThrow(() -> new RuntimeException("User not found"));
             return ResponseEntity.ok(taskService.getTasksAssignedToUser(user.getId()));
