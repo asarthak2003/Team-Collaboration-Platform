@@ -18,8 +18,8 @@ import jakarta.transaction.Transactional;
 public class ProjectService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
-    private final ActivityLogService activityLogService; // added activity log so that when user updates, creates
-                                                         // comments, it is stored in db
+    private final ActivityLogService activityLogService; // added activitylog so that when user updates, creates it is
+                                                         // stored in db
 
     public ProjectService(ProjectRepository projectRepository, UserRepository userRepository,
             ActivityLogService activityLogService) {
@@ -60,12 +60,13 @@ public class ProjectService {
         }
         project.setCreatedBy(admin);
         Project saved = projectRepository.save(project);
+        activityLogService.logAction(admin, "PROJECT_CREATED", "PROJECT", saved.getId());// creation log
         return mapToResponse(saved);
     }
 
     @Transactional
     public ProjectResponse updateProject(Long id, ProjectRequest request, String userEmail) {
-        validateAdmin(userEmail);
+        User user = validateAdmin(userEmail);
         Project project = projectRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Project not found or deleted"));
         project.setName(request.getName());
@@ -74,22 +75,24 @@ public class ProjectService {
             project.setStatus(request.getStatus());
         }
         Project updated = projectRepository.save(project);
+        activityLogService.logAction(user, "PROJECT_UPDATED", "PROJECT", updated.getId()); // updation log
         return mapToResponse(updated);
     }
 
     @Transactional
     public ProjectResponse deleteProject(Long id, String userEmail) {
-        validateAdmin(userEmail);
+        User user = validateAdmin(userEmail);
         Project project = projectRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Project not found or already deleted"));
         project.setDeleted(true);
         Project saved = projectRepository.save(project);
+        activityLogService.logAction(user, "PROJECT_DELETED", "PROJECT", saved.getId()); // deletion log
         return mapToResponse(saved);
     }
 
     @Transactional
     public ProjectResponse restoreProject(Long id, String userEmail) {
-        validateAdmin(userEmail);
+        User user = validateAdmin(userEmail);
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Project not found"));
         if (!project.isDeleted()) {
@@ -97,16 +100,18 @@ public class ProjectService {
         }
         project.setDeleted(false);
         Project saved = projectRepository.save(project);
+        activityLogService.logAction(user, "PROJECT_RESTORED", "PROJECT", saved.getId()); // restore log
         return mapToResponse(saved);
     }
 
     @Transactional
     public ProjectResponse archiveProject(Long id, String userEmail) {
-        validateAdmin(userEmail);
+        User user = validateAdmin(userEmail);
         Project project = projectRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Project not found or deleted"));
         project.setStatus("ARCHIVED");
         Project saved = projectRepository.save(project);
+        activityLogService.logAction(user, "PROJECT_ARCHIVED", "PROJECT", saved.getId()); // archive log
         return mapToResponse(saved);
     }
 
