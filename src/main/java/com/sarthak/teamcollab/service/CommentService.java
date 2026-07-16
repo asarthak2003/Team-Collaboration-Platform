@@ -45,7 +45,7 @@ public class CommentService {
         comment.setUser(user);
         comment.setContent(request.getContent());
         Comment saved = commentRepository.save(comment);
-        activityLogService.logAction(user, "COMMENT_ADDED", "TASK", task.getId());
+        activityLogService.logAction(user, "COMMENT_ADDED", "TASK", saved.getId());
         return mapToResponse(saved);
     }
 
@@ -75,8 +75,10 @@ public class CommentService {
         if (!isAdmin && !isOwner) {
             throw new RuntimeException("Access denied: You can only delete your own comments");
         }
-        activityLogService.logAction(user, "COMMENT_DELETED", "TASK", comment.getId());
+        Long deletedId = comment.getId();
         commentRepository.delete(comment);
+        activityLogService.logAction(user, "COMMENT_DELETED", "TASK", deletedId);
+
     }
 
     public List<CommentResponse> getCommentsByTask(Long taskId) {
