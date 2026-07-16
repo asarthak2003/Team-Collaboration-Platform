@@ -9,5 +9,8 @@ import com.sarthak.teamcollab.model.Project;
 @Repository
 public interface ProjectRepository extends JpaRepository<Project, Long> {
     List<Project> findByDeletedFalse();
+
     Optional<Project> findByIdAndDeletedFalse(Long id);
+
+    long countByDeletedFalse();
 }
