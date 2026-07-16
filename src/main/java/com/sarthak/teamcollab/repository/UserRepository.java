@@ -2,8 +2,9 @@ package com.sarthak.teamcollab.repository;
 
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
-import com.sarthak.teamcollab.model.User;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
+import com.sarthak.teamcollab.model.User;
 
 /*
 Extends JpaRepository<User, Long> to handle CRUD operations on the users table.
@@ -12,7 +13,7 @@ Defines existsByEmail(String email) to verify that a new registration request is
 */
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
     Optional<User> findByEmail(String email);
 
     boolean existsByEmail(String email);
