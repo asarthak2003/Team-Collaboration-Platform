@@ -34,7 +34,3 @@ build/
 
 # Git Auto-Commit Script
 git-autocommit.ps1
-
-# Local Walkthrough
-walkthrough.md
-
