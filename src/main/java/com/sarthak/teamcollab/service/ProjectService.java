@@ -28,10 +28,11 @@ public class ProjectService {
         this.activityLogService = activityLogService;
     }
 
-    private User validateAdmin(String email) {
+    private User validateAdminOrProjectManager(String email) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
-        if (!"ROLE_ADMIN".equals(user.getRole().getName())) {
-            throw new RuntimeException("ACCESS DENIED: Only ADMINS can perform this action.");
+        String role = user.getRole().getName();
+        if (!"ROLE_ADMIN".equals(role) && !"ROLE_PROJECT_MANAGER".equals(role)) {
+            throw new RuntimeException("ACCESS DENIED: Only ADMINS or PROJECT MANAGERS can perform this action.");
         }
         return user;
     }
@@ -51,7 +52,7 @@ public class ProjectService {
 
     @Transactional
     public ProjectResponse createProject(ProjectRequest request, String userEmail) {
-        User admin = validateAdmin(userEmail);
+        User admin = validateAdminOrProjectManager(userEmail);
         Project project = new Project();
         project.setName(request.getName());
         project.setDescription(request.getDescription());
@@ -66,7 +67,7 @@ public class ProjectService {
 
     @Transactional
     public ProjectResponse updateProject(Long id, ProjectRequest request, String userEmail) {
-        User user = validateAdmin(userEmail);
+        User user = validateAdminOrProjectManager(userEmail);
         Project project = projectRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Project not found or deleted"));
         project.setName(request.getName());
@@ -81,7 +82,7 @@ public class ProjectService {
 
     @Transactional
     public ProjectResponse deleteProject(Long id, String userEmail) {
-        User user = validateAdmin(userEmail);
+        User user = validateAdminOrProjectManager(userEmail);
         Project project = projectRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Project not found or already deleted"));
         project.setDeleted(true);
@@ -92,7 +93,7 @@ public class ProjectService {
 
     @Transactional
     public ProjectResponse restoreProject(Long id, String userEmail) {
-        User user = validateAdmin(userEmail);
+        User user = validateAdminOrProjectManager(userEmail);
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Project not found"));
         if (!project.isDeleted()) {
@@ -106,7 +107,7 @@ public class ProjectService {
 
     @Transactional
     public ProjectResponse archiveProject(Long id, String userEmail) {
-        User user = validateAdmin(userEmail);
+        User user = validateAdminOrProjectManager(userEmail);
         Project project = projectRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Project not found or deleted"));
         project.setStatus("ARCHIVED");

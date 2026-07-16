@@ -38,5 +38,11 @@ public class DashboardService {
         long doneTasks = activeTasks.stream().filter(task -> "DONE".equals(task.getStatus().name())).count();
         double completionRate = totalTasks == 0 ? 0.0 : ((double) doneTasks / totalTasks) * 100.0;
 
+        // group task by username
+        Map<String, Long> memberMap = activeTasks.stream()
+                .filter(task -> task.getAssignedUser() != null)
+                .collect(Collectors.groupingBy(task -> task.getAssignedUser().getName(), Collectors.counting()));
+
+        return new DashboardStatsResponse(totalProjects, totalTasks, statusMap, priorityMap, completionRate, memberMap);
     }
 }

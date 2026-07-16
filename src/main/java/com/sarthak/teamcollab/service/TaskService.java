@@ -37,11 +37,11 @@ public class TaskService {
         this.activityLogService = activityLogService;
     }
 
-    private User validateAdmin(String email) {
+    private User validateAdminOrProjectManager(String email) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User Not Found"));
         String role = user.getRole().getName();
-        if (!"ROLE_ADMIN".equals(role)) {
-            throw new RuntimeException("Access denied: Only Admin can perform this action");
+        if (!"ROLE_ADMIN".equals(role) && !"ROLE_PROJECT_MANAGER".equals(role)) {
+            throw new RuntimeException("Access denied: Only Admin or Project Manager can perform this action");
         }
         return user;
     }
@@ -57,7 +57,7 @@ public class TaskService {
 
     @Transactional
     public TaskResponse createTask(TaskRequest request, String userEmail) {
-        User creator = validateAdmin(userEmail);
+        User creator = validateAdminOrProjectManager(userEmail);
         Project project = projectRepository.findByIdAndDeletedFalse(request.getProjectId())
                 .orElseThrow(() -> new RuntimeException("Project not found or deleted"));
 
@@ -125,7 +125,7 @@ public class TaskService {
 
     @Transactional
     public TaskResponse assignTask(Long id, Long userId, String userEmail) {
-        User admin = validateAdmin(userEmail);
+        User admin = validateAdminOrProjectManager(userEmail);
         Task task = taskRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Task not found or deleted"));
         User assignee = userRepository.findById(userId)
@@ -139,7 +139,7 @@ public class TaskService {
 
     @Transactional
     public TaskResponse deleteTask(Long id, String userEmail) {
-        User admin = validateAdmin(userEmail);
+        User admin = validateAdminOrProjectManager(userEmail);
         Task task = taskRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Task not found or already deleted"));
         task.setDeleted(true);
@@ -150,7 +150,7 @@ public class TaskService {
 
     @Transactional
     public TaskResponse restoreTask(Long id, String userEmail) {
-        User admin = validateAdmin(userEmail);
+        User admin = validateAdminOrProjectManager(userEmail);
         Task task = taskRepository.findById(id).orElseThrow(() -> new RuntimeException("Task not found"));
         if (!task.isDeleted()) {
             throw new RuntimeException("Task is not deleted");
