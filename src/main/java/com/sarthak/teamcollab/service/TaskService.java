@@ -22,12 +22,14 @@ public class TaskService {
     private final TaskRepository taskRepository;
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
+    private final ActivityLogService activityLogService; // logging the users activity
 
     public TaskService(TaskRepository taskRepository, ProjectRepository projectRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository, ActivityLogService activityLogService) {
         this.taskRepository = taskRepository;
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
+        this.activityLogService = activityLogService;
     }
 
     private User validateAdmin(String email) {
@@ -74,6 +76,7 @@ public class TaskService {
         task.setDueDate(request.getDueDate());
 
         Task saved = taskRepository.save(task);
+        activityLogService.logAction(creator, "TASK_CREATED", "TASK", saved.getId());
         return mapToResponse(saved);
     }
 
@@ -111,12 +114,13 @@ public class TaskService {
             throw new RuntimeException("Access denied");
         }
         Task saved = taskRepository.save(task);
+        activityLogService.logAction(user, "TASK_UPDATED", "TASK", saved.getId());
         return mapToResponse(saved);
     }
 
     @Transactional
     public TaskResponse assignTask(Long id, Long userId, String userEmail) {
-        validateAdmin(userEmail);
+        User admin = validateAdmin(userEmail);
         Task task = taskRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Task not found or deleted"));
         User assignee = userRepository.findById(userId)
@@ -124,28 +128,31 @@ public class TaskService {
 
         task.setAssignedUser(assignee);
         Task saved = taskRepository.save(task);
+        activityLogService.logAction(admin, "TASK_ASSIGNED", "TASK", saved.getId());
         return mapToResponse(task);
     }
 
     @Transactional
     public TaskResponse deleteTask(Long id, String userEmail) {
-        validateAdmin(userEmail);
+        User admin = validateAdmin(userEmail);
         Task task = taskRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("Task not found or already deleted"));
         task.setDeleted(true);
         Task saved = taskRepository.save(task);
+        activityLogService.logAction(admin, "TASK_DELETED", "TASK", saved.getId());
         return mapToResponse(saved);
     }
 
     @Transactional
     public TaskResponse restoreTask(Long id, String userEmail) {
-        validateAdmin(userEmail);
+        User admin = validateAdmin(userEmail);
         Task task = taskRepository.findById(id).orElseThrow(() -> new RuntimeException("Task not found"));
         if (!task.isDeleted()) {
             throw new RuntimeException("Task is not deleted");
         }
         task.setDeleted(false);
         Task saved = taskRepository.save(task);
+        activityLogService.logAction(admin, "TASK_RESTORED", "TASK", saved.getId());
         return mapToResponse(saved);
     }
 

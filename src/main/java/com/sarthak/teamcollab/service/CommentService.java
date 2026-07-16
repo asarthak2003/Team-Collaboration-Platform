@@ -20,12 +20,14 @@ public class CommentService {
     private final CommentRepository commentRepository;
     private final TaskRepository taskRepository;
     private final UserRepository userRepository;
+    private final ActivityLogService activityLogService; // logging the users activity
 
     public CommentService(CommentRepository commentRepository, TaskRepository taskRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository, ActivityLogService activityLogService) {
         this.commentRepository = commentRepository;
         this.taskRepository = taskRepository;
         this.userRepository = userRepository;
+        this.activityLogService = activityLogService;
     }
 
     private CommentResponse mapToResponse(Comment comment) {
@@ -43,6 +45,7 @@ public class CommentService {
         comment.setUser(user);
         comment.setContent(request.getContent());
         Comment saved = commentRepository.save(comment);
+        activityLogService.logAction(user, "COMMENT_ADDED", "TASK", task.getId());
         return mapToResponse(saved);
     }
 
@@ -57,6 +60,7 @@ public class CommentService {
 
         comment.setContent(request.getContent());
         Comment saved = commentRepository.save(comment);
+        activityLogService.logAction(user, "COMMENT_UPDATED", "TASK", saved.getId());
         return mapToResponse(saved);
     }
 
@@ -71,6 +75,7 @@ public class CommentService {
         if (!isAdmin && !isOwner) {
             throw new RuntimeException("Access denied: You can only delete your own comments");
         }
+        activityLogService.logAction(user, "COMMENT_DELETED", "TASK", comment.getId());
         commentRepository.delete(comment);
     }
 
