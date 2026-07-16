@@ -112,4 +112,19 @@ public class TaskController {
             return ResponseEntity.badRequest().body(new AuthController.ErrorResponse(e.getMessage()));
         }
     }
+
+    @GetMapping
+    public ResponseEntity<List<TaskResponse>> searchAndFilterTasks(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String priority,
+            @RequestParam(required = false) Long assigneeId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir) {
+        List<TaskResponse> response = taskService.searchAndFilterTasks(keyword, status, priority, assigneeId, page,
+                size, sortBy, sortDir);
+        return ResponseEntity.ok(response);
+    }
 }
