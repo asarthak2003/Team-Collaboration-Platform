@@ -3,6 +3,10 @@ package com.sarthak.teamcollab.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +19,7 @@ import com.sarthak.teamcollab.model.TaskStatus;
 import com.sarthak.teamcollab.model.User;
 import com.sarthak.teamcollab.repository.ProjectRepository;
 import com.sarthak.teamcollab.repository.TaskRepository;
+import com.sarthak.teamcollab.repository.TaskSpecification;
 import com.sarthak.teamcollab.repository.UserRepository;
 
 @Service
@@ -174,10 +179,17 @@ public class TaskService {
         if (statusStr != null && !statusStr.isBlank()) {
             status = TaskStatus.valueOf(statusStr.toUpperCase());
         }
+
         TaskPriority priority = null;
         if (priorityStr != null && !priorityStr.isBlank()) {
             priority = TaskPriority.valueOf(priorityStr.toUpperCase());
         }
+
+        Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Pageable pageable = PageRequest.of(page, size, sort);
+        Specification<Task> spec = TaskSpecification.filterTasks(keyword, status, priority, assigneeeId);
+
+        return taskRepository.findAll(spec, pageable).stream().map(this::mapToResponse).collect(Collectors.toList());
 
     }
 }
