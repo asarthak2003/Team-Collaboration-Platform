@@ -70,9 +70,9 @@ public class CommentService {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new RuntimeException("Comment not found"));
 
-        boolean isAdmin = "ROLE_ADMIN".equals(user.getRole().getName());
+        boolean isAuthorized = "ROLE_ADMIN".equals(user.getRole().getName()) || "ROLE_PROJECT_MANAGER".equals(user.getRole().getName());
         boolean isOwner = comment.getUser().getId().equals(user.getId());
-        if (!isAdmin && !isOwner) {
+        if (!isAuthorized && !isOwner) {
             throw new RuntimeException("Access denied: You can only delete your own comments");
         }
         Long deletedId = comment.getId();
