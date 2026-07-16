@@ -167,4 +167,17 @@ public class TaskService {
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
+
+    public List<TaskResponse> searchAndFilterTasks(String keyword, String statusStr, String priorityStr,
+            Long assigneeeId, int page, int size, String sortBy, String sortDir) {
+        TaskStatus status = null;
+        if (statusStr != null && !statusStr.isBlank()) {
+            status = TaskStatus.valueOf(statusStr.toUpperCase());
+        }
+        TaskPriority priority = null;
+        if (priorityStr != null && !priorityStr.isBlank()) {
+            priority = TaskPriority.valueOf(priorityStr.toUpperCase());
+        }
+
+    }
 }
