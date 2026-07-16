@@ -37,7 +37,7 @@ public class ActivityLog {
     @Column(nullable = false)
     private String action;
     @Column(name = "created_at", nullable = false, updatable = false)
-    private String createdAt;
+    private LocalDateTime createdAt;
 
     @PrePersist
     protected void onCreate() {

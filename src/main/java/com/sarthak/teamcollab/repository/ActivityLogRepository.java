@@ -9,7 +9,7 @@ import com.sarthak.teamcollab.model.ActivityLog;
 
 @Repository
 public interface ActivityLogRepository extends JpaRepository<ActivityLog, Long> {
-    List<ActivityLog> findByEntityIdOrderByCreatedAtDesc(String entityType, Long entityId);
+    List<ActivityLog> findByEntityTypeAndEntityIdOrderByCreatedAtDesc(String entityType, Long entityId);
 
     List<ActivityLog> findAllByOrderByCreatedAtDesc();
 }
