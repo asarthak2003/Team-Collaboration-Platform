@@ -18,10 +18,14 @@ import jakarta.transaction.Transactional;
 public class ProjectService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
+    private final ActivityLogService activityLogService; // added activity log so that when user updates, creates
+                                                         // comments, it is stored in db
 
-    public ProjectService(ProjectRepository projectRepository, UserRepository userRepository) {
+    public ProjectService(ProjectRepository projectRepository, UserRepository userRepository,
+            ActivityLogService activityLogService) {
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
+        this.activityLogService = activityLogService;
     }
 
     private User validateAdmin(String email) {
