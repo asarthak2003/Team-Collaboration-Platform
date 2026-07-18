@@ -7,6 +7,8 @@ import DashboardLayout from './components/DashboardLayout';
 import Dashboard from './pages/Dashboard';
 import Projects from './pages/Projects';
 import TaskBoard from './pages/TaskBoard';
+import Team from './pages/Team';
+import Profile from './pages/Profile';
 
 // Protected Route wrapper component
 const ProtectedRoute = ({ children }) => {
@@ -28,8 +30,7 @@ const ProtectedRoute = ({ children }) => {
 };
 
 // Simple placeholder page components for our routing targets
-const Team = () => <div className="text-slate-400 text-sm">Team Directory Page Coming Soon</div>;
-const Profile = () => <div className="text-slate-400 text-sm">Profile Settings Page Coming Soon</div>;
+
 
 function AppContent() {
   const { user } = useAuth();
