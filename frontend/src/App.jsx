@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import DashboardLayout from './components/DashboardLayout';
 
 // Protected Route wrapper component
 const ProtectedRoute = ({ children }) => {
@@ -23,6 +24,13 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+// Simple placeholder page components for our routing targets
+const DashboardHome = () => <div className="text-slate-400 text-sm">Dashboard Overview Page Coming Soon</div>;
+const Projects = () => <div className="text-slate-400 text-sm">Projects Workspace Page Coming Soon</div>;
+const Tasks = () => <div className="text-slate-400 text-sm">Tasks Kanban Board Coming Soon</div>;
+const Team = () => <div className="text-slate-400 text-sm">Team Directory Page Coming Soon</div>;
+const Profile = () => <div className="text-slate-400 text-sm">Profile Settings Page Coming Soon</div>;
+
 function AppContent() {
   const { user } = useAuth();
   
@@ -32,28 +40,25 @@ function AppContent() {
       <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
       <Route path="/register" element={user ? <Navigate to="/" replace /> : <Register />} />
       
-      {/* Protected Root Dashboard */}
+      {/* Protected Layout Router */}
       <Route
-        path="/*"
+        path="/"
         element={
           <ProtectedRoute>
-            <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center space-y-4">
-              <h1 className="text-4xl font-extrabold text-indigo-400 animate-pulse">
-                Welcome back, {user?.name}!
-              </h1>
-              <p className="text-slate-400 text-sm">
-                You are successfully logged in as <span className="text-indigo-400 font-semibold">{user?.role}</span>
-              </p>
-              <button 
-                onClick={() => window.location.reload(localStorage.clear())}
-                className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-xs font-bold transition"
-              >
-                Sign Out / Reset Session
-              </button>
-            </div>
+            <DashboardLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        {/* Nested Dashboard Sub-pages */}
+        <Route index element={<DashboardHome />} />
+        <Route path="projects" element={<Projects />} />
+        <Route path="tasks" element={<Tasks />} />
+        <Route path="team" element={<Team />} />
+        <Route path="profile" element={<Profile />} />
+        
+        {/* Catch-all redirects back to root dashboard */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Route>
     </Routes>
   );
 }
