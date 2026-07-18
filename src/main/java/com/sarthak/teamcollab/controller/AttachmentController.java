@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
 
-import org.springframework.boot.autoconfigure.web.ServerProperties.Tomcat.Resource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -56,19 +56,25 @@ public class AttachmentController {
 
     @GetMapping("/download/{fileName:.+}")
     public ResponseEntity<Resource> downloadFile(@PathVariable String fileName, HttpServletRequest request) {
-        try{
+        try {
             Resource resource = fileStorageService.loadFileAsResource(fileName);
             String contentType = null;
-            try{
+            try {
                 contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
-            }catch(IOException e){
+            } catch (IOException e) {
                 // Fallback if type cannot be determined
             }
-            
-            return ResponseEntity.ok()
-                .contentType(contentType != null ?
-                    
-            )
+
+            if (contentType == null) {
+                contentType = "application/octet-stream";
+            }
+            return ResponseEntity.ok().contentType(org.springframework.http.MediaType.parseMediaType(contentType))
+                    .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + resource.getFilename() + "\"")
+                    .body(resource);
+
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
         }
     }
 }
