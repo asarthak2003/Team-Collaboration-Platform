@@ -36,6 +36,9 @@ public class AuthService {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new BadRequestException("Email already exists");
         }
+        if (userRepository.existsByUsername(request.getUsername())) {
+            throw new BadRequestException("Username already exists");
+        }
         String roleName = request.getRoleName().toUpperCase();
         if (!roleName.startsWith("ROLE_")) {
             roleName = "ROLE_" + roleName;
@@ -47,6 +50,7 @@ public class AuthService {
 
         User user = new User();
         user.setName(request.getName());
+        user.setUsername(request.getUsername());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(role);
@@ -58,10 +62,10 @@ public class AuthService {
     }
 
     public AuthResponse loginUser(LoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new BadRequestException("Invalid email or password"));
+        User user = userRepository.findByUsernameOrEmail(request.getUsernameOrEmail(), request.getUsernameOrEmail())
+                .orElseThrow(() -> new BadRequestException("Invalid username/email or password"));
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new BadRequestException("Invalid email or password");
+            throw new BadRequestException("Invalid username/email or password");
         }
         String token = jwtTokenProvider.generateToken(user.getEmail(), user.getRole().getName());
         return new AuthResponse(

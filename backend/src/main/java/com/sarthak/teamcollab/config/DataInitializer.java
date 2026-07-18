@@ -36,29 +36,21 @@ public class DataInitializer implements CommandLineRunner {
             }
         }
 
-        // 3. Create Admin User if not exists
-        String adminEmail = "[EMAIL_ADDRESS]";
+        // Create Admin User if not exists
+        String adminEmail = "admin@admin.com";
         if (userRepository.findByEmail(adminEmail).isEmpty()) {
+            Role adminRole = roleRepository.findByName("ROLE_ADMIN")
+                    .orElseThrow(() -> new RuntimeException("ROLE_ADMIN not initialized"));
             User admin = new User();
             admin.setName("Admin User");
             admin.setUsername("admin");
             admin.setEmail(adminEmail);
             admin.setPassword(passwordEncoder.encode("admin"));
+            admin.setRole(adminRole);
             admin.setActive(true);
 
-            Optional<Role> adminRoleOpt = roleRepository.findByName("ROLE_ADMIN");
-            if (adminRoleOpt.isPresent()) {
-                admin.setRoles(Collections.singleton(adminRoleOpt.get()));
-            } else {
-                // Fallback: try to find by ID if somehow name lookup failed despite creation
-                // But since we just created it, findByName should work.
-                // If not, this is a deeper issue.
-                // For robustness in initialization, we assume role exists.
-                throw new RuntimeException("ROLE_ADMIN not found after creation!");
-            }
-
             userRepository.save(admin);
-            System.out.println("Admin user created.");
+            System.out.println("Default Admin account seeded successfully.");
         }
     }
 

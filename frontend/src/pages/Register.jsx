@@ -5,6 +5,7 @@ import { Layers, User, Mail, Lock, Shield, Loader2, AlertCircle } from 'lucide-r
 
 function Register() {
   const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -24,9 +25,14 @@ function Register() {
       return;
     }
 
+    if (username.trim().length < 3) {
+      setError('Username must be at least 3 characters long.');
+      return;
+    }
+
     setIsLoading(true);
 
-    const result = await register(name, email, password, roleName);
+    const result = await register(name, username.trim(), email, password, roleName);
     setIsLoading(false);
 
     if (result.success) {
@@ -55,7 +61,7 @@ function Register() {
 
         {/* Error Alert Box */}
         {error && (
-          <div className="flex items-center space-x-2 bg-rose-950/40 border border-rose-900/50 p-4 rounded-xl text-rose-400 text-sm mb-6">
+          <div className="flex items-center space-x-2 bg-rose-955/40 border border-rose-900/50 p-4 rounded-xl text-rose-400 text-sm mb-6">
             <AlertCircle size={16} className="shrink-0" />
             <span>{error}</span>
           </div>
@@ -63,6 +69,7 @@ function Register() {
 
         {/* Registration Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
+          
           <div>
             <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
               Full Name
@@ -74,10 +81,30 @@ function Register() {
               <input
                 type="text"
                 required
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-955 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
                 placeholder="John Doe"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                disabled={isLoading}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              Username
+            </label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
+                <User size={16} />
+              </span>
+              <input
+                type="text"
+                required
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-955 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
+                placeholder="johndoe"
+                value={username}
+                onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s+/g, ''))}
                 disabled={isLoading}
               />
             </div>
@@ -94,7 +121,7 @@ function Register() {
               <input
                 type="email"
                 required
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-955 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -115,7 +142,7 @@ function Register() {
                 type="password"
                 required
                 minLength="6"
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-955 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
                 placeholder="Minimum 6 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -136,7 +163,7 @@ function Register() {
                 type="password"
                 required
                 minLength="6"
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-955 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
                 placeholder="Re-enter your password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -154,14 +181,13 @@ function Register() {
                 <Shield size={16} />
               </span>
               <select
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition appearance-none cursor-pointer"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-955 border border-slate-800 rounded-xl text-sm text-slate-100 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition appearance-none cursor-pointer"
                 value={roleName}
                 onChange={(e) => setRoleName(e.target.value)}
                 disabled={isLoading}
               >
                 <option value="ROLE_MEMBER">Workspace Member</option>
                 <option value="ROLE_PROJECT_MANAGER">Project Manager</option>
-                <option value="ROLE_ADMIN">Administrator</option>
               </select>
             </div>
           </div>

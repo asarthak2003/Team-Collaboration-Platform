@@ -20,10 +20,10 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     // Login handler connecting to Spring Boot auth endpoint
-    const login = async (email, password) => {
+    const login = async (usernameOrEmail, password) => {
         try {
-            const response = await api.post("/api/auth/login", { email, password });
-            const { token, userId, name, role } = response.data;
+            const response = await api.post("/api/auth/login", { usernameOrEmail, password });
+            const { token, userId, name, email, role } = response.data;
             const userData = { id: userId, name, email, role };
 
             localStorage.setItem("token", token);
@@ -38,9 +38,9 @@ export const AuthProvider = ({ children }) => {
     };
 
     // Register handler connecting to Spring Boot auth endpoint
-    const register = async (name, email, password, roleName) => {
+    const register = async (name, username, email, password, roleName) => {
         try {
-            const response = await api.post("/api/auth/register", { name, email, password, roleName });
+            const response = await api.post("/api/auth/register", { name, username, email, password, roleName });
             return { success: true };
         } catch (error) {
             const message = error.response?.data?.error || 'Registration failed';
