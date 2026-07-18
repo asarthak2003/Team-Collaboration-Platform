@@ -1,15 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-import { User, Lock, Shield, Mail, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { User, Lock, Eye, EyeOff, Shield, Mail, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 
 function Profile() {
   const { user, updateUser } = useAuth();
   
   // States
   const [name, setName] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
@@ -33,13 +39,17 @@ function Profile() {
     }
 
     // Check if password change is attempted
-    if (password) {
-      if (password.length < 6) {
-        setError('Password must be at least 6 characters long.');
+    if (password.trim() || currentPassword.trim() || confirmPassword.trim()) {
+      if (!currentPassword.trim()) {
+        setError('Current password is required to make security updates.');
+        return;
+      }
+      if (password.trim().length < 6) {
+        setError('New password must be at least 6 characters long.');
         return;
       }
       if (password !== confirmPassword) {
-        setError('Passwords do not match.');
+        setError('New passwords do not match.');
         return;
       }
     }
@@ -49,7 +59,7 @@ function Profile() {
     try {
       const payload = {
         name,
-        // Pass password only if user typed it, otherwise pass null so backend @Size doesn't trigger
+        currentPassword: currentPassword.trim() ? currentPassword : null,
         password: password.trim() ? password : null
       };
 
@@ -62,6 +72,7 @@ function Profile() {
       });
 
       // Clear password fields
+      setCurrentPassword('');
       setPassword('');
       setConfirmPassword('');
       setSuccess('Profile updated successfully!');
@@ -96,7 +107,7 @@ function Profile() {
 
       {/* Error Banner */}
       {error && (
-        <div className="flex items-center space-x-2 bg-rose-950/40 border border-rose-900/50 p-4 rounded-xl text-rose-400 text-xs">
+        <div className="flex items-center space-x-2 bg-rose-955/40 border border-rose-900/50 p-4 rounded-xl text-rose-400 text-xs">
           <AlertCircle size={16} />
           <span>{error}</span>
         </div>
@@ -144,10 +155,36 @@ function Profile() {
                 type="text"
                 required
                 disabled={loading}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-850 rounded-xl text-sm text-slate-100 placeholder-slate-700 focus:outline-none focus:border-indigo-500 transition"
+                className="w-full pl-10 pr-4 py-2.5 bg-slate-955 border border-slate-850 rounded-xl text-sm text-slate-100 placeholder-slate-700 focus:outline-none focus:border-indigo-500 transition"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              Enter Current Password
+            </label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
+                <Lock size={16} />
+              </span>
+              <input
+                type={showCurrentPassword ? "text" : "password"}
+                disabled={loading}
+                className="w-full pl-10 pr-12 py-2.5 bg-slate-955 border border-slate-850 rounded-xl text-sm text-slate-100 placeholder-slate-700 focus:outline-none focus:border-indigo-500 transition"
+                placeholder="Required for changing password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-500 hover:text-slate-300 transition"
+                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+              >
+                {showCurrentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
           </div>
 
@@ -160,37 +197,48 @@ function Profile() {
                 <Lock size={16} />
               </span>
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 disabled={loading}
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-850 rounded-xl text-sm text-slate-100 placeholder-slate-700 focus:outline-none focus:border-indigo-500 transition"
+                className="w-full pl-10 pr-12 py-2.5 bg-slate-955 border border-slate-850 rounded-xl text-sm text-slate-100 placeholder-slate-700 focus:outline-none focus:border-indigo-500 transition"
                 placeholder="Leave blank to keep current password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-500 hover:text-slate-300 transition"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
           </div>
 
-          {password && (
-            <div className="animate-in fade-in slide-in-from-top-2 duration-150">
-              <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                Confirm New Password
-              </label>
-              <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
-                  <Lock size={16} />
-                </span>
-                <input
-                  type="password"
-                  required
-                  disabled={loading}
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-850 rounded-xl text-sm text-slate-100 placeholder-slate-700 focus:outline-none focus:border-indigo-500 transition"
-                  placeholder="Re-enter new password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-              </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              Re-enter Password
+            </label>
+            <div className="relative">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-500">
+                <Lock size={16} />
+              </span>
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                disabled={loading}
+                className="w-full pl-10 pr-12 py-2.5 bg-slate-955 border border-slate-850 rounded-xl text-sm text-slate-100 placeholder-slate-700 focus:outline-none focus:border-indigo-500 transition"
+                placeholder="Confirm your new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-500 hover:text-slate-300 transition"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
-          )}
+          </div>
 
           <div className="flex items-center justify-end pt-4 border-t border-slate-900/60 mt-6">
             <button

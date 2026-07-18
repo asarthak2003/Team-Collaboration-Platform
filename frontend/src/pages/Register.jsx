@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
-import { Layers, User, Mail, Lock, Shield, Loader2, AlertCircle } from 'lucide-react';
+import { Layers, User, Mail, Lock, Shield, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
 
 function Register() {
   const [name, setName] = useState('');
@@ -10,6 +10,8 @@ function Register() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [roleName, setRoleName] = useState('ROLE_MEMBER'); // Defaults to Member
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -139,15 +141,22 @@ function Register() {
                 <Lock size={16} />
               </span>
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 minLength="6"
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-955 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
+                className="w-full pl-10 pr-12 py-2.5 bg-slate-955 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
                 placeholder="Minimum 6 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
               />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-500 hover:text-slate-300 transition"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
           </div>
 
@@ -160,15 +169,22 @@ function Register() {
                 <Lock size={16} />
               </span>
               <input
-                type="password"
+                type={showConfirmPassword ? "text" : "password"}
                 required
                 minLength="6"
-                className="w-full pl-10 pr-4 py-2.5 bg-slate-955 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
+                className="w-full pl-10 pr-12 py-2.5 bg-slate-955 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
                 placeholder="Re-enter your password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 disabled={isLoading}
               />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-500 hover:text-slate-300 transition"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
           </div>
 

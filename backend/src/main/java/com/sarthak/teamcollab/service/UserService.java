@@ -54,7 +54,14 @@ public class UserService {
     public UserResponse updateProfile(String email, UserProfileRequest request) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         user.setName(request.getName());
+        
         if (request.getPassword() != null && !request.getPassword().trim().isEmpty()) {
+            if (request.getCurrentPassword() == null || request.getCurrentPassword().trim().isEmpty()) {
+                throw new com.sarthak.teamcollab.exception.BadRequestException("Current password is required to set a new password.");
+            }
+            if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+                throw new com.sarthak.teamcollab.exception.BadRequestException("Current password is incorrect.");
+            }
             user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
 

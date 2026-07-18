@@ -12,6 +12,9 @@ import lombok.NoArgsConstructor;
 public class UserProfileRequest {
     @NotBlank(message = "Name cannot be blank")
     private String name;
+    
+    private String currentPassword;
+    
     @Size(min = 6, message = "Password must be at least 6 characters long")
     private String password;
 }

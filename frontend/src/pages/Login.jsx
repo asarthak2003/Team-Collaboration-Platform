@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
-import { Layers, User, Lock, Loader2, AlertCircle } from 'lucide-react'
+import { Layers, User, Lock, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react'
 
 function Login() {
     const [usernameOrEmail, setUsernameOrEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const { login } = useAuth();
@@ -78,14 +79,21 @@ function Login() {
                                 <Lock size={16} />
                             </span>
                             <input
-                                type="password"
+                                type={showPassword ? "text" : "password"}
                                 required
-                                className="w-full pl-10 pr-4 py-3 bg-slate-950 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
+                                className="w-full pl-10 pr-12 py-3 bg-slate-955 border border-slate-800 rounded-xl text-sm text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition"
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 disabled={isLoading}
                             />
+                            <button
+                                type="button"
+                                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-500 hover:text-slate-300 transition"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
                         </div>
                     </div>
                     <button
