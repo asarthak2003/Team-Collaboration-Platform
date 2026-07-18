@@ -21,6 +21,8 @@ import com.sarthak.teamcollab.repository.ProjectRepository;
 import com.sarthak.teamcollab.repository.TaskRepository;
 import com.sarthak.teamcollab.repository.TaskSpecification;
 import com.sarthak.teamcollab.repository.UserRepository;
+import com.sarthak.teamcollab.exception.ResourceNotFoundException;
+import org.springframework.security.access.AccessDeniedException;
 
 @Service
 public class TaskService {
@@ -28,20 +30,23 @@ public class TaskService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final ActivityLogService activityLogService; // logging the users activity
+    private final NotificationService notificationService; // for live notification
 
     public TaskService(TaskRepository taskRepository, ProjectRepository projectRepository,
-            UserRepository userRepository, ActivityLogService activityLogService) {
+            UserRepository userRepository, ActivityLogService activityLogService,
+            NotificationService notificationService) {
         this.taskRepository = taskRepository;
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
         this.activityLogService = activityLogService;
+        this.notificationService = notificationService;
     }
 
     private User validateAdminOrProjectManager(String email) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User Not Found"));
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User Not Found"));
         String role = user.getRole().getName();
         if (!"ROLE_ADMIN".equals(role) && !"ROLE_PROJECT_MANAGER".equals(role)) {
-            throw new RuntimeException("Access denied: Only Admin or Project Manager can perform this action");
+            throw new AccessDeniedException("Access denied: Only Admin or Project Manager can perform this action");
         }
         return user;
     }
@@ -59,7 +64,7 @@ public class TaskService {
     public TaskResponse createTask(TaskRequest request, String userEmail) {
         User creator = validateAdminOrProjectManager(userEmail);
         Project project = projectRepository.findByIdAndDeletedFalse(request.getProjectId())
-                .orElseThrow(() -> new RuntimeException("Project not found or deleted"));
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found or deleted"));
 
         Task task = new Task();
         task.setTitle(request.getTitle());
@@ -75,25 +80,39 @@ public class TaskService {
         }
         if (request.getAssignedUserId() != null) {
             User assignee = userRepository.findById(request.getAssignedUserId())
-                    .orElseThrow(() -> new RuntimeException("Assigned user not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Assigned user not found"));
             task.setAssignedUser(assignee);
         }
         task.setDueDate(request.getDueDate());
 
         Task saved = taskRepository.save(task);
         activityLogService.logAction(creator, "TASK_CREATED", "TASK", saved.getId());
+
+        // Notify assignee if assigned to someone else
+        if (saved.getAssignedUser() != null && !saved.getAssignedUser().getId().equals(creator.getId())) {
+            notificationService.createAndSendNotification(
+                    saved.getAssignedUser(),
+                    "You have been assigned to task: " + saved.getTitle(),
+                    "/tasks/" + saved.getId()
+            );
+        }
+
         return mapToResponse(saved);
     }
 
     @Transactional
     public TaskResponse updateTask(Long id, TaskRequest request, String userEmail) {
-        User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         Task task = taskRepository.findByIdAndDeletedFalse(id)
-                .orElseThrow(() -> new RuntimeException("Task not found or deleted"));
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found or deleted"));
+        
+        // Capture old assignee
+        User oldAssignee = task.getAssignedUser();
+
         String role = user.getRole().getName();
         if ("ROLE_MEMBER".equals(role)) {
             if (task.getAssignedUser() == null || !task.getAssignedUser().getId().equals(user.getId())) {
-                throw new RuntimeException("Access denied: Members can only update their own assigned tasks");
+                throw new AccessDeniedException("Access denied: Members can only update their own assigned tasks");
             }
             if (request.getStatus() != null) {
                 task.setStatus(TaskStatus.valueOf(request.getStatus().toUpperCase()));
@@ -111,15 +130,28 @@ public class TaskService {
             }
             if (request.getAssignedUserId() != null) {
                 User assignee = userRepository.findById(request.getAssignedUserId())
-                        .orElseThrow(() -> new RuntimeException("Assignee user not found"));
+                        .orElseThrow(() -> new ResourceNotFoundException("Assignee user not found"));
                 task.setAssignedUser(assignee);
             }
             task.setDueDate(request.getDueDate());
         } else {
-            throw new RuntimeException("Access denied");
+            throw new AccessDeniedException("Access denied");
         }
         Task saved = taskRepository.save(task);
         activityLogService.logAction(user, "TASK_UPDATED", "TASK", saved.getId());
+
+        // Notify new assignee if changed (and they aren't the editor)
+        User newAssignee = saved.getAssignedUser();
+        if (newAssignee != null && (oldAssignee == null || !oldAssignee.getId().equals(newAssignee.getId()))) {
+            if (!newAssignee.getId().equals(user.getId())) {
+                notificationService.createAndSendNotification(
+                        newAssignee,
+                        "You have been assigned to task: " + saved.getTitle(),
+                        "/tasks/" + saved.getId()
+                );
+            }
+        }
+
         return mapToResponse(saved);
     }
 
@@ -127,13 +159,23 @@ public class TaskService {
     public TaskResponse assignTask(Long id, Long userId, String userEmail) {
         User admin = validateAdminOrProjectManager(userEmail);
         Task task = taskRepository.findByIdAndDeletedFalse(id)
-                .orElseThrow(() -> new RuntimeException("Task not found or deleted"));
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found or deleted"));
         User assignee = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("Assignee user not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Assignee user not found"));
 
         task.setAssignedUser(assignee);
         Task saved = taskRepository.save(task);
         activityLogService.logAction(admin, "TASK_ASSIGNED", "TASK", saved.getId());
+
+        // Notify assignee (if they didn't assign it to themselves)
+        if (!assignee.getId().equals(admin.getId())) {
+            notificationService.createAndSendNotification(
+                    assignee,
+                    "You have been assigned to task: " + task.getTitle(),
+                    "/tasks/" + task.getId()
+            );
+        }
+
         return mapToResponse(task);
     }
 
