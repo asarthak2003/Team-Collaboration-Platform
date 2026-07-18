@@ -1,10 +1,8 @@
 package com.sarthak.teamcollab.service;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -92,13 +90,12 @@ public class UserService {
         return mapToResponse(saved);
     }
 
-    public List<UserResponse> searchAndFilterUsers(String keyword, String roleName, int page, int size,
+    public Page<UserResponse> searchAndFilterUsers(String keyword, String roleName, int page, int size,
             String sortBy, String sortDir) {
-        Sort sort = sortDir.equalsIgnoreCase("desc") ? Sort.by(sortBy).descending() : Sort.by(sortBy).ascending();
+        Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name()) ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
         Specification<User> spec = UserSpecification.filterUsers(keyword, roleName);
-        return userRepository.findAll(spec, pageable).stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
+        return userRepository.findAll(spec, pageable).map(this::mapToResponse);
     }
 }

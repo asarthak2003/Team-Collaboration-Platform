@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
+import org.springframework.data.domain.Page;
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -114,7 +115,7 @@ public class TaskController {
     }
 
     @GetMapping
-    public ResponseEntity<List<TaskResponse>> searchAndFilterTasks(
+    public ResponseEntity<Page<TaskResponse>> searchAndFilterTasks(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String priority,
@@ -123,7 +124,7 @@ public class TaskController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
-        List<TaskResponse> response = taskService.searchAndFilterTasks(keyword, status, priority, assigneeId, page,
+        Page<TaskResponse> response = taskService.searchAndFilterTasks(keyword, status, priority, assigneeId, page,
                 size, sortBy, sortDir);
         return ResponseEntity.ok(response);
     }

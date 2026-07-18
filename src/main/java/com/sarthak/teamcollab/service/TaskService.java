@@ -173,7 +173,7 @@ public class TaskService {
                 .collect(Collectors.toList());
     }
 
-    public List<TaskResponse> searchAndFilterTasks(String keyword, String statusStr, String priorityStr,
+    public org.springframework.data.domain.Page<TaskResponse> searchAndFilterTasks(String keyword, String statusStr, String priorityStr,
             Long assigneeeId, int page, int size, String sortBy, String sortDir) {
         TaskStatus status = null;
         if (statusStr != null && !statusStr.isBlank()) {
@@ -189,7 +189,7 @@ public class TaskService {
         Pageable pageable = PageRequest.of(page, size, sort);
         Specification<Task> spec = TaskSpecification.filterTasks(keyword, status, priority, assigneeeId);
 
-        return taskRepository.findAll(spec, pageable).stream().map(this::mapToResponse).collect(Collectors.toList());
+        return taskRepository.findAll(spec, pageable).map(this::mapToResponse);
 
     }
 }
