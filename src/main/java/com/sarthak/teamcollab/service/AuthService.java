@@ -1,5 +1,8 @@
 package com.sarthak.teamcollab.service;
 
+import com.sarthak.teamcollab.exception.BadRequestException;
+import com.sarthak.teamcollab.exception.ResourceNotFoundException;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,7 +34,7 @@ public class AuthService {
     @Transactional
     public AuthResponse registerUser(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already exists");
+            throw new BadRequestException("Email already exists");
         }
         String roleName = request.getRoleName().toUpperCase();
         if (!roleName.startsWith("ROLE_")) {
@@ -40,7 +43,7 @@ public class AuthService {
         String finalRoleName = roleName;
 
         Role role = roleRepository.findByName(roleName)
-                .orElseThrow(() -> new RuntimeException("Role " + finalRoleName + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Role " + finalRoleName + " not found"));
 
         User user = new User();
         user.setName(request.getName());
@@ -56,9 +59,9 @@ public class AuthService {
 
     public AuthResponse loginUser(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+                .orElseThrow(() -> new BadRequestException("Invalid email or password"));
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid email or password");
+            throw new BadRequestException("Invalid email or password");
         }
         String token = jwtTokenProvider.generateToken(user.getEmail(), user.getRole().getName());
         return new AuthResponse(

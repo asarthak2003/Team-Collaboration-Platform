@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
 import java.util.List;
 import org.springframework.data.domain.Page;
+import com.sarthak.teamcollab.exception.ResourceNotFoundException;
 
 @RestController
 @RequestMapping("/api/tasks")
@@ -86,7 +87,7 @@ public class TaskController {
     public ResponseEntity<?> getMyTasks(Principal principal) {
                 String userEmail = principal.getName();
         User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return ResponseEntity.ok(taskService.getTasksAssignedToUser(user.getId()));
     }
 

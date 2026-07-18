@@ -12,6 +12,7 @@ import com.sarthak.teamcollab.exception.ResourceNotFoundException;
 import com.sarthak.teamcollab.model.Notification;
 import com.sarthak.teamcollab.model.User;
 import com.sarthak.teamcollab.repository.NotificationRepository;
+import org.springframework.security.access.AccessDeniedException;
 
 @Service
 public class NotificationService {
@@ -51,7 +52,7 @@ public class NotificationService {
         Notification notification = notificationRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Notification not found"));
         if (!notification.getRecipient().getEmail().equals(email)) {
-            throw new RuntimeException("Access denied: You cannot modify another user's notifications");
+            throw new AccessDeniedException("Access denied: You cannot modify another user's notifications");
         }
         notification.setRead(true);
         notificationRepository.save(notification);

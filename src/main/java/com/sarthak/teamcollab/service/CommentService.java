@@ -1,5 +1,7 @@
 package com.sarthak.teamcollab.service;
 
+import org.springframework.security.access.AccessDeniedException;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -86,11 +88,11 @@ public class CommentService {
 
     @Transactional
     public CommentResponse editComment(Long commentId, CommentRequest request, String userEmail) {
-        User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new RuntimeException("Comment not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));
         if (!comment.getUser().getId().equals(user.getId())) {
-            throw new RuntimeException("Access denied: You can only edit your own comments");
+            throw new AccessDeniedException("Access denied: You can only edit your own comments");
         }
 
         comment.setContent(request.getContent());
@@ -101,15 +103,15 @@ public class CommentService {
 
     @Transactional
     public void deleteComment(Long commentId, String userEmail) {
-        User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new RuntimeException("Comment not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));
 
         boolean isAuthorized = "ROLE_ADMIN".equals(user.getRole().getName())
                 || "ROLE_PROJECT_MANAGER".equals(user.getRole().getName());
         boolean isOwner = comment.getUser().getId().equals(user.getId());
         if (!isAuthorized && !isOwner) {
-            throw new RuntimeException("Access denied: You can only delete your own comments");
+            throw new AccessDeniedException("Access denied: You can only delete your own comments");
         }
         Long deletedId = comment.getId();
         commentRepository.delete(comment);
@@ -119,7 +121,7 @@ public class CommentService {
 
     public List<CommentResponse> getCommentsByTask(Long taskId) {
         taskRepository.findByIdAndDeletedFalse(taskId)
-                .orElseThrow(() -> new RuntimeException("Task Not found or deleted"));
+                .orElseThrow(() -> new ResourceNotFoundException("Task Not found or deleted"));
 
         return commentRepository.findByTaskIdOrderByCreatedAtAsc(taskId).stream().map(this::mapToResponse)
                 .collect(Collectors.toList());

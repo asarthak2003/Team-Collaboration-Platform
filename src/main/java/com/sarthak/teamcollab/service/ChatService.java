@@ -1,5 +1,7 @@
 package com.sarthak.teamcollab.service;
 
+import com.sarthak.teamcollab.exception.ResourceNotFoundException;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,8 +36,8 @@ public class ChatService {
 
     @Transactional
     public ChatMessageResponse saveMessage(Long taskId, String email, String content) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
-        Task task = taskRepository.findById(taskId).orElseThrow(() -> new RuntimeException("Task not found"));
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        Task task = taskRepository.findById(taskId).orElseThrow(() -> new ResourceNotFoundException("Task not found"));
         ChatMessage message = new ChatMessage();
         message.setTask(task);
         message.setSender(user);

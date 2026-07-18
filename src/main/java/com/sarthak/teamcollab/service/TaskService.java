@@ -1,5 +1,7 @@
 package com.sarthak.teamcollab.service;
 
+import com.sarthak.teamcollab.exception.BadRequestException;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -183,7 +185,7 @@ public class TaskService {
     public TaskResponse deleteTask(Long id, String userEmail) {
         User admin = validateAdminOrProjectManager(userEmail);
         Task task = taskRepository.findByIdAndDeletedFalse(id)
-                .orElseThrow(() -> new RuntimeException("Task not found or already deleted"));
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found or already deleted"));
         task.setDeleted(true);
         Task saved = taskRepository.save(task);
         activityLogService.logAction(admin, "TASK_DELETED", "TASK", saved.getId());
@@ -193,9 +195,9 @@ public class TaskService {
     @Transactional
     public TaskResponse restoreTask(Long id, String userEmail) {
         User admin = validateAdminOrProjectManager(userEmail);
-        Task task = taskRepository.findById(id).orElseThrow(() -> new RuntimeException("Task not found"));
+        Task task = taskRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Task not found"));
         if (!task.isDeleted()) {
-            throw new RuntimeException("Task is not deleted");
+            throw new BadRequestException("Task is not deleted");
         }
         task.setDeleted(false);
         Task saved = taskRepository.save(task);

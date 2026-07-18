@@ -1,5 +1,8 @@
 package com.sarthak.teamcollab.service;
 
+import org.springframework.security.access.AccessDeniedException;
+import com.sarthak.teamcollab.exception.ResourceNotFoundException;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Page;
@@ -34,10 +37,10 @@ public class UserService {
 
     private User validateAdmin(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Admin not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Admin not found"));
 
         if (!"ROLE_ADMIN".equals(user.getRole().getName())) {
-            throw new RuntimeException("Access denied: Only Admin can perform this action");
+            throw new AccessDeniedException("Access denied: Only Admin can perform this action");
         }
         return user;
     }
@@ -49,7 +52,7 @@ public class UserService {
 
     @Transactional
     public UserResponse updateProfile(String email, UserProfileRequest request) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         user.setName(request.getName());
         if (request.getPassword() != null && !request.getPassword().trim().isEmpty()) {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -64,14 +67,14 @@ public class UserService {
     public UserResponse updateUserRole(Long id, String roleName, String adminEmail) {
         User admin = validateAdmin(adminEmail);
         User targetUser = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         String formattedRoleName = roleName.toUpperCase();
         if (!formattedRoleName.startsWith("ROLE_")) {
             formattedRoleName = "ROLE_" + formattedRoleName;
         }
         String finalRoleName = formattedRoleName;
         Role role = roleRepository.findByName(formattedRoleName)
-                .orElseThrow(() -> new RuntimeException("Role " + finalRoleName + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Role " + finalRoleName + " not found"));
         targetUser.setRole(role);
         User saved = userRepository.save(targetUser);
         activityLogService.logAction(admin, "USER_ROLE_UPDATED", "USER", saved.getId());
@@ -82,7 +85,7 @@ public class UserService {
     public UserResponse updateUserStatus(Long id, boolean active, String adminEmail) {
         User admin = validateAdmin(adminEmail);
         User targetUser = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         targetUser.setActive(active);
         User saved = userRepository.save(targetUser);
         String action = active ? "USER_ACTIVATED" : "USER_DEACTIVATED";

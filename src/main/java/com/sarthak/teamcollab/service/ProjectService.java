@@ -1,5 +1,9 @@
 package com.sarthak.teamcollab.service;
 
+import org.springframework.security.access.AccessDeniedException;
+import com.sarthak.teamcollab.exception.BadRequestException;
+import com.sarthak.teamcollab.exception.ResourceNotFoundException;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,10 +33,10 @@ public class ProjectService {
     }
 
     private User validateAdminOrProjectManager(String email) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         String role = user.getRole().getName();
         if (!"ROLE_ADMIN".equals(role) && !"ROLE_PROJECT_MANAGER".equals(role)) {
-            throw new RuntimeException("ACCESS DENIED: Only ADMINS or PROJECT MANAGERS can perform this action.");
+            throw new AccessDeniedException("ACCESS DENIED: Only ADMINS or PROJECT MANAGERS can perform this action.");
         }
         return user;
     }
@@ -69,7 +73,7 @@ public class ProjectService {
     public ProjectResponse updateProject(Long id, ProjectRequest request, String userEmail) {
         User user = validateAdminOrProjectManager(userEmail);
         Project project = projectRepository.findByIdAndDeletedFalse(id)
-                .orElseThrow(() -> new RuntimeException("Project not found or deleted"));
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found or deleted"));
         project.setName(request.getName());
         project.setDescription(request.getDescription());
         if (request.getStatus() != null && !request.getStatus().isBlank()) {
@@ -84,7 +88,7 @@ public class ProjectService {
     public ProjectResponse deleteProject(Long id, String userEmail) {
         User user = validateAdminOrProjectManager(userEmail);
         Project project = projectRepository.findByIdAndDeletedFalse(id)
-                .orElseThrow(() -> new RuntimeException("Project not found or already deleted"));
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found or already deleted"));
         project.setDeleted(true);
         Project saved = projectRepository.save(project);
         activityLogService.logAction(user, "PROJECT_DELETED", "PROJECT", saved.getId()); // deletion log
@@ -95,9 +99,9 @@ public class ProjectService {
     public ProjectResponse restoreProject(Long id, String userEmail) {
         User user = validateAdminOrProjectManager(userEmail);
         Project project = projectRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
         if (!project.isDeleted()) {
-            throw new RuntimeException("Project is not deleted");
+            throw new BadRequestException("Project is not deleted");
         }
         project.setDeleted(false);
         Project saved = projectRepository.save(project);
@@ -109,7 +113,7 @@ public class ProjectService {
     public ProjectResponse archiveProject(Long id, String userEmail) {
         User user = validateAdminOrProjectManager(userEmail);
         Project project = projectRepository.findByIdAndDeletedFalse(id)
-                .orElseThrow(() -> new RuntimeException("Project not found or deleted"));
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found or deleted"));
         project.setStatus("ARCHIVED");
         Project saved = projectRepository.save(project);
         activityLogService.logAction(user, "PROJECT_ARCHIVED", "PROJECT", saved.getId()); // archive log
@@ -118,7 +122,7 @@ public class ProjectService {
 
     public ProjectResponse getProjectById(Long id) {
         Project project = projectRepository.findByIdAndDeletedFalse(id)
-                .orElseThrow(() -> new RuntimeException("Project not found or deleted"));
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found or deleted"));
         return mapToResponse(project);
     }
 

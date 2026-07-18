@@ -1,5 +1,8 @@
 package com.sarthak.teamcollab.service;
 
+import com.sarthak.teamcollab.exception.BadRequestException;
+import com.sarthak.teamcollab.exception.ResourceNotFoundException;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -51,21 +54,21 @@ public class AttachmentService {
 
     @Transactional
     public AttachmentResponse uploadAttachment(MultipartFile file, Long projectId, Long taskId, String userEmail) {
-        User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         if (projectId == null && taskId == null) {
-            throw new RuntimeException("Attachment must be linked to either a project or a task.");
+            throw new BadRequestException("Attachment must be linked to either a project or a task.");
         }
 
         Project project = null;
         if (projectId != null) {
             project = projectRepository.findById(projectId)
-                    .orElseThrow(() -> new RuntimeException("Project not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
         }
 
         Task task = null;
         if (taskId != null) {
             task = taskRepository.findById(taskId)
-                    .orElseThrow(() -> new RuntimeException("Task not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
         }
 
         // save file to disk using FileStorageService
