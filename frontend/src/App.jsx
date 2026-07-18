@@ -4,6 +4,8 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import DashboardLayout from './components/DashboardLayout';
+import Dashboard from './pages/Dashboard';
+import Projects from './pages/Projects';
 
 // Protected Route wrapper component
 const ProtectedRoute = ({ children }) => {
@@ -25,8 +27,6 @@ const ProtectedRoute = ({ children }) => {
 };
 
 // Simple placeholder page components for our routing targets
-const DashboardHome = () => <div className="text-slate-400 text-sm">Dashboard Overview Page Coming Soon</div>;
-const Projects = () => <div className="text-slate-400 text-sm">Projects Workspace Page Coming Soon</div>;
 const Tasks = () => <div className="text-slate-400 text-sm">Tasks Kanban Board Coming Soon</div>;
 const Team = () => <div className="text-slate-400 text-sm">Team Directory Page Coming Soon</div>;
 const Profile = () => <div className="text-slate-400 text-sm">Profile Settings Page Coming Soon</div>;
@@ -50,7 +50,7 @@ function AppContent() {
         }
       >
         {/* Nested Dashboard Sub-pages */}
-        <Route index element={<DashboardHome />} />
+        <Route index element={<Dashboard />} />
         <Route path="projects" element={<Projects />} />
         <Route path="tasks" element={<Tasks />} />
         <Route path="team" element={<Team />} />
