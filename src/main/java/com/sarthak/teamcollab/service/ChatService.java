@@ -1,10 +1,15 @@
 package com.sarthak.teamcollab.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sarthak.teamcollab.dto.ChatMessageResponse;
 import com.sarthak.teamcollab.model.ChatMessage;
+import com.sarthak.teamcollab.model.Task;
+import com.sarthak.teamcollab.model.User;
 import com.sarthak.teamcollab.repository.ChatMessageRepository;
 import com.sarthak.teamcollab.repository.TaskRepository;
 import com.sarthak.teamcollab.repository.UserRepository;
@@ -29,6 +34,18 @@ public class ChatService {
 
     @Transactional
     public ChatMessageResponse saveMessage(Long taskId, String email, String content) {
+        User user = userRepository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        Task task = taskRepository.findById(taskId).orElseThrow(() -> new RuntimeException("Task not found"));
+        ChatMessage message = new ChatMessage();
+        message.setTask(task);
+        message.setSender(user);
+        message.setContent(content);
+        ChatMessage saved = chatMessageRepository.save(message);
+        return mapToResponse(saved);
+    }
 
+    public List<ChatMessageResponse> getChatHistory(Long taskId) {
+        return chatMessageRepository.findByTaskIdOrderBySentAtAsc(taskId).stream().map(this::mapToResponse)
+                .collect(Collectors.toList());
     }
 }
