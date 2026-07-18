@@ -4,10 +4,13 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import com.sarthak.teamcollab.model.Role;
+import com.sarthak.teamcollab.model.User;
 import com.sarthak.teamcollab.repository.RoleRepository;
+import com.sarthak.teamcollab.repository.UserRepository;
 
 // Implements Spring Boot's CommandLineRunner, which runs custom startup code as soon as the application context is loaded.
 // Checks if the roles (ROLE_ADMIN, ROLE_PROJECT_MANAGER, ROLE_MEMBER) exist in the roles table. If not, it saves them to the database.
