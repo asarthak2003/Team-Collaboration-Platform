@@ -8,6 +8,7 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
 
+    // Check if user session already exists in localStorage on application startup
     useEffect(() => {
         const storedUser = localStorage.getItem("user");
         const storedToken = localStorage.getItem("token");
@@ -18,6 +19,48 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
     }, []);
 
+    // Login handler connecting to Spring Boot auth endpoint
+    const login = async (email, password) => {
+        try {
+            const response = await api.post("/api/auth/login", { email, password });
+            const { token, userId, name, role } = response.data;
+            const userData = { id: userId, name, email, role };
 
-}
+            localStorage.setItem("token", token);
+            localStorage.setItem("user", JSON.stringify(userData));
 
+            setUser(userData);
+            return { success: true };
+        } catch (error) {
+            const message = error.response?.data?.error || 'Invalid credentials or login failed';
+            return { success: false, error: message };
+        }
+    };
+
+    // Register handler connecting to Spring Boot auth endpoint
+    const register = async (name, email, password, roleName) => {
+        try {
+            const response = await api.post("/api/auth/register", { name, email, password, roleName });
+            return { success: true };
+        } catch (error) {
+            const message = error.response?.data?.error || 'Registration failed';
+            return { success: false, error: message };
+        }
+    };
+
+    const logout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setUser(null);
+    };
+    return (
+        <AuthContext.Provider value={{ user, loading, login, register, logout }}>
+            {children}
+        </AuthContext.Provider>
+    );
+};
+
+// Custom hook to access the authentication context
+export const useAuth = () => {
+    return useContext(AuthContext);
+};
