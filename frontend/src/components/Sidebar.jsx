@@ -24,11 +24,11 @@ function Sidebar() {
   ];
 
   return (
-    <aside className="w-64 bg-slate-900 border-r border-slate-800 flex flex-col justify-between h-screen sticky top-0">
+    <aside className="w-64 bg-theme-card border-r border-theme-border flex flex-col justify-between h-screen sticky top-0">
       
       {/* Brand Logo Header */}
       <div>
-        <div className="p-6 border-b border-slate-800 flex items-center space-x-3">
+        <div className="p-6 border-b border-theme-border flex items-center space-x-3">
           <div className="bg-indigo-600 p-2 rounded-lg text-white">
             <Layers size={20} />
           </div>
@@ -49,7 +49,7 @@ function Sidebar() {
                 className={`flex items-center space-x-3 px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   isActive
                     ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/10'
-                    : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+                    : 'text-theme-muted hover:bg-theme-bg hover:text-theme-text'
                 }`}
               >
                 <Icon size={18} />
@@ -61,18 +61,18 @@ function Sidebar() {
       </div>
 
       {/* User Session profile / Logout Footer */}
-      <div className="p-4 border-t border-slate-800 bg-slate-900/40">
+      <div className="p-4 border-t border-theme-border bg-theme-bg/40">
         <div className="flex items-center justify-between">
           <div className="flex flex-col truncate pr-2">
-            <span className="text-sm font-bold text-slate-200 truncate">{user?.name}</span>
-            <span className="text-[10px] text-slate-500 uppercase font-semibold tracking-wider truncate">
+            <span className="text-sm font-bold text-theme-text truncate">{user?.name}</span>
+            <span className="text-[10px] text-theme-muted uppercase font-semibold tracking-wider truncate">
               {user?.role?.replace('ROLE_', '')}
             </span>
           </div>
           <button
             onClick={logout}
             title="Sign Out"
-            className="p-2.5 bg-slate-950 hover:bg-rose-950 text-slate-400 hover:text-rose-455 rounded-xl transition-all active:scale-95"
+            className="p-2.5 bg-theme-bg hover:bg-rose-500/10 border border-theme-border text-theme-muted hover:text-rose-500 rounded-xl transition-all active:scale-95"
           >
             <LogOut size={16} />
           </button>

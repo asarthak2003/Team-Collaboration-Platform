@@ -1,1 +1,121 @@
 @import "tailwindcss";
+
+@theme {
+  --color-theme-bg: var(--theme-bg);
+  --color-theme-card: var(--theme-card);
+  --color-theme-border: var(--theme-border);
+  --color-theme-text: var(--theme-text);
+  --color-theme-muted: var(--theme-muted);
+}
+
+/* 1. Deep Space Dark Theme (Default) */
+:root {
+  --theme-bg: #0b0f19;
+  --theme-card: #111827;
+  --theme-border: #1e293b;
+  --theme-text: #f8fafc;
+  --theme-muted: #94a3b8;
+}
+
+/* 2. Professional Executive Light Theme */
+html.light {
+  --theme-bg: #f8fafc;
+  --theme-card: #ffffff;
+  --theme-border: #e2e8f0;
+  --theme-text: #0f172a;
+  --theme-muted: #64748b;
+}
+
+/* Global Transition Settings */
+@layer base {
+  body {
+    background-color: var(--theme-bg);
+    color: var(--theme-text);
+    transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), 
+                border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), 
+                color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  div, aside, header, main, select, input, textarea, button {
+    transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), 
+                border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1), 
+                color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* 3. Light Mode Theme Override Rules */
+html.light .bg-slate-950,
+html.light body {
+  background-color: var(--theme-bg) !important;
+}
+
+html.light .bg-slate-900,
+html.light .bg-slate-900\/60,
+html.light .bg-slate-900\/40,
+html.light .bg-slate-900\/30,
+html.light .bg-slate-950\/20,
+html.light .bg-slate-900\/20,
+html.light aside,
+html.light header {
+  background-color: var(--theme-card) !important;
+}
+
+html.light .border-slate-800,
+html.light .border-slate-900,
+html.light .border-slate-850,
+html.light .border-slate-850\/40,
+html.light .border-slate-805,
+html.light aside,
+html.light header,
+html.light select,
+html.light input,
+html.light textarea {
+  border-color: var(--theme-border) !important;
+}
+
+html.light .text-slate-100,
+html.light .text-slate-200,
+html.light .text-slate-300,
+html.light .text-slate-350,
+html.light .text-white,
+html.light h2,
+html.light h3,
+html.light h4 {
+  color: var(--theme-text) !important;
+}
+
+html.light .text-slate-400,
+html.light .text-slate-500,
+html.light .text-slate-600 {
+  color: var(--theme-muted) !important;
+}
+
+/* Light Mode Input Fields & Forms Reset */
+html.light input, 
+html.light select, 
+html.light textarea {
+  background-color: var(--theme-bg) !important;
+  color: var(--theme-text) !important;
+}
+
+/* Bouncing / Glowing Hover states for Light Mode */
+html.light .hover\:bg-slate-800\/60:hover {
+  background-color: rgba(79, 70, 229, 0.05) !important;
+  color: #4f46e5 !important;
+}
+
+html.light .hover\:border-slate-800:hover,
+html.light .hover\:border-slate-850:hover,
+html.light .hover\:border-slate-900:hover {
+  border-color: #6366f1 !important;
+}
+
+html.light .bg-slate-950\/40 {
+  background-color: rgba(79, 70, 229, 0.02) !important;
+}
+
+/* Custom shadows for Light Mode cards */
+html.light .shadow-2xl {
+  box-shadow: 0 25px 50px -12px rgba(79, 70, 229, 0.08) !important;
+}
