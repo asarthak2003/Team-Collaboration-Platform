@@ -1,5 +1,8 @@
 package com.sarthak.teamcollab.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,6 +33,22 @@ public class NotificationService {
 
         NotificationResponse response = mapToResponse(saved);
         messagingTemplate.convertAndSendToUser("/topic/notifications/" + recipient.getEmail(), response);
+    }
+
+    public List<NotificationResponse> getNotificationsForUser(String email) {
+        return notificationRepository.findByRecipientEmailOrderByCreatedAtDesc(email).stream().map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void markAsRead(Long id, String email) {
+        Notification notification = notificationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Not Found"));
+        if (!notification.getRecipient().getEmail().equals(email)) {
+            throw new RuntimeException("Access denied: You cannot modify another user's notifications");
+        }
+        notification.setRead(true);
+        notificationRepository.save(notification);
     }
 
 }
