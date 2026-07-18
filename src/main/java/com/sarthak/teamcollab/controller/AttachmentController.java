@@ -1,8 +1,10 @@
 package com.sarthak.teamcollab.controller;
 
+import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
 
+import org.springframework.boot.autoconfigure.web.ServerProperties.Tomcat.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,6 +17,8 @@ import org.springframework.web.multipart.MultipartFile;
 import com.sarthak.teamcollab.dto.AttachmentResponse;
 import com.sarthak.teamcollab.service.AttachmentService;
 import com.sarthak.teamcollab.service.FileStorageService;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/attachments")
@@ -50,4 +54,21 @@ public class AttachmentController {
         return ResponseEntity.ok(attachmentService.getAttachmentsForTask(taskId));
     }
 
+    @GetMapping("/download/{fileName:.+}")
+    public ResponseEntity<Resource> downloadFile(@PathVariable String fileName, HttpServletRequest request) {
+        try{
+            Resource resource = fileStorageService.loadFileAsResource(fileName);
+            String contentType = null;
+            try{
+                contentType = request.getServletContext().getMimeType(resource.getFile().getAbsolutePath());
+            }catch(IOException e){
+                // Fallback if type cannot be determined
+            }
+            
+            return ResponseEntity.ok()
+                .contentType(contentType != null ?
+                    
+            )
+        }
+    }
 }
