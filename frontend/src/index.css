@@ -74,7 +74,10 @@ html.light {
 
 /* Universal Layout & Color Override Engine */
 html.light body,
-html.light .bg-slate-950 {
+html.light .bg-slate-955,
+html.light .bg-slate-950,
+html.light .bg-slate-955\/40,
+html.light .bg-slate-950\/40 {
   background-color: var(--theme-bg) !important;
 }
 
@@ -94,7 +97,8 @@ html.light .bg-slate-900\/20 {
   background-color: var(--theme-card) !important;
 }
 
-html.light .bg-slate-900\/30 {
+html.light .bg-slate-900\/30,
+html.light .bg-slate-900\/10 {
   background-color: var(--theme-elevated) !important;
 }
 
@@ -196,53 +200,53 @@ html.light .bg-theme-bg\/40 {
   box-shadow: var(--shadow-card) !important;
 }
 
-/* 📊 Status Colors System (Both Themes) */
-.bg-rose-955\/40,
-.bg-rose-950\/40,
-[class*="bg-rose-950"] {
+/* 📊 Status Colors System (Light Theme Only) */
+html.light .bg-rose-955\/40,
+html.light .bg-rose-950\/40,
+html.light [class*="bg-rose-950"] {
   background-color: #fef2f2 !important; /* Error BG */
   border-color: #fecaca !important;
 }
-.text-rose-400,
-[class*="text-rose-400"] {
+html.light .text-rose-400,
+html.light [class*="text-rose-400"] {
   color: #991b1b !important;             /* Error Text */
 }
-.border-rose-900\/50,
-[class*="border-rose-900"] {
+html.light .border-rose-900\/50,
+html.light [class*="border-rose-900"] {
   border-color: #fecaca !important;
 }
 
 /* Success */
-.bg-emerald-500\/10,
-[class*="bg-emerald"] {
+html.light .bg-emerald-500\/10,
+html.light [class*="bg-emerald"] {
   background-color: #f0fdf4 !important; /* Success BG */
   border-color: #bbf7d0 !important;
 }
-.text-emerald-400,
-[class*="text-emerald"] {
+html.light .text-emerald-400,
+html.light [class*="text-emerald"] {
   color: #166534 !important;             /* Success Text */
 }
 
 /* Warning */
-.bg-orange-500\/10,
-[class*="bg-orange"] {
+html.light .bg-orange-500\/10,
+html.light [class*="bg-orange"] {
   background-color: #fffbeb !important; /* Warning BG */
   border-color: #fde68a !important;
 }
-.text-orange-400,
-[class*="text-orange"] {
+html.light .text-orange-400,
+html.light [class*="text-orange"] {
   color: #92400e !important;             /* Warning Text */
 }
 
 /* Info */
-.bg-indigo-950\/10,
-.bg-indigo-500\/10,
-[class*="bg-indigo-950"] {
+html.light .bg-indigo-950\/10,
+html.light .bg-indigo-500\/10,
+html.light [class*="bg-indigo-950"] {
   background-color: #eff6ff !important; /* Info BG */
   border-color: #bfdbfe !important;
 }
-.text-indigo-400,
-.text-indigo-500,
-[class*="text-indigo-400"] {
+html.light .text-indigo-400,
+html.light .text-indigo-500,
+html.light [class*="text-indigo-400"] {
   color: #1d4ed8 !important;             /* Info Text */
 }
