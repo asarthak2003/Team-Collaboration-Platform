@@ -29,13 +29,9 @@ public class TaskController {
     public ResponseEntity<?> createTask(
             @Valid @RequestBody TaskRequest request,
             Principal principal) {
-        try {
-            String userEmail = principal.getName();
-            TaskResponse response = taskService.createTask(request, userEmail);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new AuthController.ErrorResponse(e.getMessage()));
-        }
+                String userEmail = principal.getName();
+        TaskResponse response = taskService.createTask(request, userEmail);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}")
@@ -43,13 +39,9 @@ public class TaskController {
             @PathVariable Long id,
             @Valid @RequestBody TaskRequest request,
             Principal principal) {
-        try {
-            String userEmail = principal.getName();
-            TaskResponse response = taskService.updateTask(id, request, userEmail);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new AuthController.ErrorResponse(e.getMessage()));
-        }
+                String userEmail = principal.getName();
+        TaskResponse response = taskService.updateTask(id, request, userEmail);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/{id}/assign/{userId}")
@@ -57,39 +49,27 @@ public class TaskController {
             @PathVariable Long id,
             @PathVariable Long userId,
             Principal principal) {
-        try {
-            String userEmail = principal.getName();
-            TaskResponse response = taskService.assignTask(id, userId, userEmail);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new AuthController.ErrorResponse(e.getMessage()));
-        }
+                String userEmail = principal.getName();
+        TaskResponse response = taskService.assignTask(id, userId, userEmail);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteTask(
             @PathVariable Long id,
             Principal principal) {
-        try {
-            String userEmail = principal.getName();
-            TaskResponse response = taskService.deleteTask(id, userEmail);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new AuthController.ErrorResponse(e.getMessage()));
-        }
+                String userEmail = principal.getName();
+        TaskResponse response = taskService.deleteTask(id, userEmail);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}/restore")
     public ResponseEntity<?> restoreTask(
             @PathVariable Long id,
             Principal principal) {
-        try {
-            String userEmail = principal.getName();
-            TaskResponse response = taskService.restoreTask(id, userEmail);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new AuthController.ErrorResponse(e.getMessage()));
-        }
+                String userEmail = principal.getName();
+        TaskResponse response = taskService.restoreTask(id, userEmail);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/project/{projectId}")
@@ -104,14 +84,10 @@ public class TaskController {
 
     @GetMapping("/my-tasks")
     public ResponseEntity<?> getMyTasks(Principal principal) {
-        try {
-            String userEmail = principal.getName();
-            User user = userRepository.findByEmail(userEmail)
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-            return ResponseEntity.ok(taskService.getTasksAssignedToUser(user.getId()));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new AuthController.ErrorResponse(e.getMessage()));
-        }
+                String userEmail = principal.getName();
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        return ResponseEntity.ok(taskService.getTasksAssignedToUser(user.getId()));
     }
 
     @GetMapping

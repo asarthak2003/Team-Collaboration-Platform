@@ -31,46 +31,30 @@ public class CommentController {
     @PostMapping("/tasks/{taskId}/comments")
     public ResponseEntity<?> addComment(@PathVariable Long taskId, @Valid @RequestBody CommentRequest request,
             Principal principal) {
-        try {
-            String userEmail = principal.getName();
-            CommentResponse response = commentService.addcomment(taskId, request, userEmail);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new AuthController.ErrorResponse(e.getMessage()));
-        }
+                String userEmail = principal.getName();
+        CommentResponse response = commentService.addcomment(taskId, request, userEmail);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/tasks/{taskId}/comments")
     public ResponseEntity<?> getCommentsByTask(@PathVariable Long taskId) {
-        try {
-            List<CommentResponse> response = commentService.getCommentsByTask(taskId);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new AuthController.ErrorResponse(e.getMessage()));
-        }
+                List<CommentResponse> response = commentService.getCommentsByTask(taskId);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/comments/{id}")
     public ResponseEntity<?> editComment(@PathVariable Long id, @Valid @RequestBody CommentRequest request,
             Principal principal) {
-        try {
-            String userEmail = principal.getName();
-            CommentResponse response = commentService.editComment(id, request, userEmail);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new AuthController.ErrorResponse(e.getMessage()));
-        }
+                String userEmail = principal.getName();
+        CommentResponse response = commentService.editComment(id, request, userEmail);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/comments/{id}")
     public ResponseEntity<?> deleteComment(@PathVariable Long id, Principal principal) {
-        try {
-            String userEmail = principal.getName();
-            commentService.deleteComment(id, userEmail);
-            return ResponseEntity.ok(new AuthController.ErrorResponse("Comment deleted successfully"));
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new AuthController.ErrorResponse(e.getMessage()));
-        }
+                String userEmail = principal.getName();
+        commentService.deleteComment(id, userEmail);
+        return ResponseEntity.ok(new AuthController.ErrorResponse("Comment deleted successfully"));
     }
 
     public static class SuccessResponse {

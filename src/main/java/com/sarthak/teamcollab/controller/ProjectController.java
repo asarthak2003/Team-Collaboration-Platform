@@ -24,13 +24,9 @@ public class ProjectController {
     public ResponseEntity<?> createProject(
             @Valid @RequestBody ProjectRequest request,
             Principal principal) {
-        try {
-            String userEmail = principal.getName();
-            ProjectResponse response = projectService.createProject(request, userEmail);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new AuthController.ErrorResponse(e.getMessage()));
-        }
+                String userEmail = principal.getName();
+        ProjectResponse response = projectService.createProject(request, userEmail);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}")
@@ -38,62 +34,42 @@ public class ProjectController {
             @PathVariable Long id,
             @Valid @RequestBody ProjectRequest request,
             Principal principal) {
-        try {
-            String userEmail = principal.getName();
-            ProjectResponse response = projectService.updateProject(id, request, userEmail);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new AuthController.ErrorResponse(e.getMessage()));
-        }
+                String userEmail = principal.getName();
+        ProjectResponse response = projectService.updateProject(id, request, userEmail);
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteProject(
             @PathVariable Long id,
             Principal principal) {
-        try {
-            String userEmail = principal.getName();
-            ProjectResponse response = projectService.deleteProject(id, userEmail);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new AuthController.ErrorResponse(e.getMessage()));
-        }
+                String userEmail = principal.getName();
+        ProjectResponse response = projectService.deleteProject(id, userEmail);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}/restore")
     public ResponseEntity<?> restoreProject(
             @PathVariable Long id,
             Principal principal) {
-        try {
-            String userEmail = principal.getName();
-            ProjectResponse response = projectService.restoreProject(id, userEmail);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new AuthController.ErrorResponse(e.getMessage()));
-        }
+                String userEmail = principal.getName();
+        ProjectResponse response = projectService.restoreProject(id, userEmail);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}/archive")
     public ResponseEntity<?> archiveProject(
             @PathVariable Long id,
             Principal principal) {
-        try {
-            String userEmail = principal.getName();
-            ProjectResponse response = projectService.archiveProject(id, userEmail);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new AuthController.ErrorResponse(e.getMessage()));
-        }
+                String userEmail = principal.getName();
+        ProjectResponse response = projectService.archiveProject(id, userEmail);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<?> getProjectById(@PathVariable Long id) {
-        try {
-            ProjectResponse response = projectService.getProjectById(id);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new AuthController.ErrorResponse(e.getMessage()));
-        }
+                ProjectResponse response = projectService.getProjectById(id);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping

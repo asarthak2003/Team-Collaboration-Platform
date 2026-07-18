@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import java.security.Principal;
-import java.util.List;
+import org.springframework.data.domain.Page;
 
 @RestController
 @RequestMapping("/api/users")
@@ -22,42 +22,30 @@ public class UserController {
 
     @PutMapping("/profile")
     public ResponseEntity<?> updateProfile(@Valid @RequestBody UserProfileRequest request, Principal principal) {
-        try {
-            String email = principal.getName();
-            UserResponse response = userService.updateProfile(email, request);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new AuthController.ErrorResponse(e.getMessage()));
-        }
+                String email = principal.getName();
+        UserResponse response = userService.updateProfile(email, request);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}/role")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateUserRole(@PathVariable Long id, @RequestParam String role, Principal principal) {
-        try {
-            String adminEmail = principal.getName();
-            UserResponse response = userService.updateUserRole(id, role, adminEmail);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new AuthController.ErrorResponse(e.getMessage()));
-        }
+                String adminEmail = principal.getName();
+        UserResponse response = userService.updateUserRole(id, role, adminEmail);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/{id}/status")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateUserStatus(@PathVariable Long id, @RequestParam boolean active,
             Principal principal) {
-        try {
-            String adminEmail = principal.getName();
-            UserResponse response = userService.updateUserStatus(id, active, adminEmail);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new AuthController.ErrorResponse(e.getMessage()));
-        }
+                String adminEmail = principal.getName();
+        UserResponse response = userService.updateUserStatus(id, active, adminEmail);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping
-    public ResponseEntity<List<UserResponse>> searchAndFilterUsers(
+    public ResponseEntity<Page<UserResponse>> searchAndFilterUsers(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String role,
             @RequestParam(defaultValue = "0") int page,
@@ -65,7 +53,7 @@ public class UserController {
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDir) {
 
-        List<UserResponse> response = userService.searchAndFilterUsers(keyword, role, page, size, sortBy, sortDir);
+        Page<UserResponse> response = userService.searchAndFilterUsers(keyword, role, page, size, sortBy, sortDir);
         return ResponseEntity.ok(response);
     }
 }

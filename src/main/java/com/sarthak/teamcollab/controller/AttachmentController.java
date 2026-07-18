@@ -35,13 +35,9 @@ public class AttachmentController {
     public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file,
             @RequestParam(required = false) Long projectId, @RequestParam(required = false) Long taskId,
             Principal principal) {
-        try {
-            String email = principal.getName();
-            AttachmentResponse response = attachmentService.uploadAttachment(file, projectId, taskId, email);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(new AuthController.ErrorResponse(e.getMessage()));
-        }
+                String email = principal.getName();
+        AttachmentResponse response = attachmentService.uploadAttachment(file, projectId, taskId, email);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/project/{projectId}")
