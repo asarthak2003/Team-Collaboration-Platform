@@ -1,22 +1,49 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
-import { X, Loader2, MessageSquare, Trash2, Send, AlertCircle, Calendar, User, ShieldAlert } from 'lucide-react';
+import { Client } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
+import { 
+  X, 
+  Loader2, 
+  MessageSquare, 
+  Trash2, 
+  Send, 
+  AlertCircle, 
+  Calendar, 
+  User, 
+  ShieldAlert, 
+  MessagesSquare, 
+  Wifi, 
+  WifiOff 
+} from 'lucide-react';
 
 function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDeleted }) {
   const { user } = useAuth();
   
-  // States
+  // Right-hand Panel Active Tab ('comments' or 'chat')
+  const [activeTab, setActiveTab] = useState('comments');
+
+  // Task Details States
   const [task, setTask] = useState(null);
-  const [comments, setComments] = useState([]);
-  const [newComment, setNewComment] = useState('');
-  
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [commentsLoading, setCommentsLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [commentSubmitting, setCommentSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  // Comments States
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState('');
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentSubmitting, setCommentSubmitting] = useState(false);
+
+  // Chat Room States
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+  const [chatConnected, setChatConnected] = useState(false);
+  const stompClientRef = useRef(null);
+  const chatEndRef = useRef(null);
 
   // Form Fields
   const [title, setTitle] = useState('');
@@ -28,7 +55,14 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
 
   const isAdminOrPM = user?.role === 'ROLE_ADMIN' || user?.role === 'ROLE_PROJECT_MANAGER';
 
-  // Load Task & Comments details
+  // Auto-scroll chat window to bottom on new messages
+  useEffect(() => {
+    if (activeTab === 'chat') {
+      chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [chatMessages, activeTab]);
+
+  // Load Task particulars on open
   const loadData = async () => {
     try {
       setLoading(true);
@@ -42,7 +76,7 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
       setTask(t);
       setUsers(userRes.data.content || []);
 
-      // Set form parameters
+      // Prepopulate form values
       setTitle(t.title);
       setDescription(t.description || '');
       setStatus(t.status);
@@ -50,7 +84,7 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
       setAssignedUserId(t.assignedUserId ? String(t.assignedUserId) : '');
       setDueDate(t.dueDate ? t.dueDate.split('T')[0] : '');
 
-      // Load comments
+      // Load Comments history
       fetchComments();
     } catch (err) {
       console.error('Failed to load task details:', err);
@@ -64,7 +98,7 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
     try {
       setCommentsLoading(true);
       const res = await api.get(`/api/tasks/${taskId}/comments`);
-      setComments(res.data);
+      setComments(res.data || []);
     } catch (err) {
       console.error('Failed to load comments:', err);
     } finally {
@@ -72,15 +106,78 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
     }
   };
 
+  const fetchChatHistory = async () => {
+    try {
+      setChatLoading(true);
+      const res = await api.get(`/api/tasks/${taskId}/chat`);
+      setChatMessages(res.data || []);
+    } catch (err) {
+      console.error('Failed to load chat history:', err);
+    } finally {
+      setChatLoading(false);
+    }
+  };
+
+  // Sync Task Details and reset comments tab
   useEffect(() => {
     if (isOpen && taskId) {
       loadData();
+      setActiveTab('comments');
     }
   }, [isOpen, taskId]);
 
+  // WebSocket connection managing Chat room subscription
+  useEffect(() => {
+    if (!isOpen || activeTab !== 'chat' || !taskId) {
+      // Clean up WebSocket client when chat tab is inactive
+      if (stompClientRef.current) {
+        stompClientRef.current.deactivate();
+        stompClientRef.current = null;
+        setChatConnected(false);
+      }
+      return;
+    }
+
+    // Fetch Chat history first
+    fetchChatHistory();
+
+    const client = new Client({
+      webSocketFactory: () => new SockJS('http://localhost:8080/ws-chat'),
+      reconnectDelay: 5000,
+      heartbeatIncoming: 4000,
+      heartbeatOutgoing: 4000,
+    });
+
+    client.onConnect = () => {
+      console.log('Connected to Task Chat Room:', taskId);
+      setChatConnected(true);
+
+      // Subscribe to this task's specific chat channel topic
+      client.subscribe('/topic/task/' + taskId, (message) => {
+        const received = JSON.parse(message.body);
+        setChatMessages((prev) => [...prev, received]);
+      });
+    };
+
+    client.onDisconnect = () => {
+      console.log('Disconnected from Task Chat Room:', taskId);
+      setChatConnected(false);
+    };
+
+    client.activate();
+    stompClientRef.current = client;
+
+    return () => {
+      if (client) {
+        client.deactivate();
+      }
+      setChatConnected(false);
+    };
+  }, [activeTab, isOpen, taskId]);
+
   if (!isOpen) return null;
 
-  // Authorization Checks
+  // Authorization Security Guards
   const isAssignedToCurrentUser = task && task.assignedUserId === user?.id;
   const canModifyAll = isAdminOrPM;
   const canModifyStatus = isAdminOrPM || isAssignedToCurrentUser;
@@ -95,7 +192,6 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
     setSubmitting(true);
     setError('');
 
-    // Construct payload based on role access
     const payload = canModifyAll 
       ? {
           title,
@@ -106,7 +202,6 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
           dueDate: dueDate || null
         }
       : {
-          // Member can only modify status
           title: task.title,
           description: task.description,
           status,
@@ -167,18 +262,33 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
     }
   };
 
+  // Push chat message via Stomp publish
+  const handleSendChatMessage = (e) => {
+    e.preventDefault();
+    if (!chatInput.trim() || !stompClientRef.current || !chatConnected) return;
+
+    stompClientRef.current.publish({
+      destination: '/app/chat.sendMessage',
+      body: JSON.stringify({
+        taskId: parseInt(taskId),
+        content: chatInput
+      })
+    });
+
+    setChatInput('');
+  };
+
   const getInitials = (name) => {
     if (!name) return '?';
-    return name.split(' ').map(n => n[0]).slice(0,2).join('').toUpperCase();
+    return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
       <div className="w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 flex flex-col md:flex-row h-[85vh] max-h-[700px]">
         
-        {/* Left Side: Task Configuration Form */}
-        <div className="flex-1 p-6 border-b md:border-b-0 md:border-r border-slate-805 flex flex-col overflow-y-auto scrollbar-thin scrollbar-thumb-slate-950">
-          
+        {/* Left Column: Edit Form */}
+        <div className="flex-1 p-6 border-b md:border-b-0 md:border-r border-slate-850 flex flex-col overflow-y-auto scrollbar-thin scrollbar-thumb-slate-950">
           <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
             <h3 className="font-bold text-slate-100">Task Details</h3>
             <button 
@@ -205,7 +315,6 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
                   </div>
                 )}
 
-                {/* Title (Disabled for member) */}
                 <div>
                   <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
                     Task Title
@@ -220,7 +329,6 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
                   />
                 </div>
 
-                {/* Description (Disabled for member) */}
                 <div>
                   <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
                     Description
@@ -234,10 +342,7 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
                   />
                 </div>
 
-                {/* Fields Grid */}
                 <div className="grid grid-cols-2 gap-4">
-                  
-                  {/* Status Selection (Restrict permissions checks) */}
                   <div>
                     <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
                       Status
@@ -263,7 +368,6 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
                     )}
                   </div>
 
-                  {/* Priority Selector (PM/Admin only) */}
                   <div>
                     <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
                       Priority
@@ -281,7 +385,6 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
                     </select>
                   </div>
 
-                  {/* Assignee Selector (PM/Admin only) */}
                   <div>
                     <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
                       Assignee
@@ -301,7 +404,6 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
                     </select>
                   </div>
 
-                  {/* Due Date (PM/Admin only) */}
                   <div>
                     <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
                       Due Date
@@ -314,18 +416,16 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
                       onChange={(e) => setDueDate(e.target.value)}
                     />
                   </div>
-
                 </div>
               </div>
 
-              {/* Form Actions Footer Panel */}
               <div className="flex items-center justify-between pt-6 border-t border-slate-800/60 mt-8">
                 {canModifyAll ? (
                   <button
                     type="button"
                     onClick={handleDeleteTask}
                     disabled={submitting}
-                    className="p-2 bg-slate-950 hover:bg-rose-950 border border-slate-800 rounded-xl text-slate-500 hover:text-rose-500 transition-all active:scale-95"
+                    className="p-2 bg-slate-950 hover:bg-rose-950 border border-slate-850 rounded-xl text-slate-500 hover:text-rose-500 transition-all active:scale-95"
                     title="Delete Task"
                   >
                     <Trash2 size={16} />
@@ -339,14 +439,14 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
                     type="button"
                     onClick={onClose}
                     disabled={submitting}
-                    className="px-4 py-2 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-xs font-bold transition text-slate-400 hover:text-slate-200"
+                    className="px-4 py-2 bg-slate-950 hover:bg-slate-800 border border-slate-850 rounded-xl text-xs font-bold transition text-slate-400 hover:text-slate-200"
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-800 rounded-xl text-xs font-bold transition text-white flex items-center space-x-1.5 shadow-md"
+                    className="px-5 py-2 bg-indigo-650 hover:bg-indigo-600 disabled:bg-indigo-850 rounded-xl text-xs font-bold transition text-white flex items-center space-x-1.5 shadow-md"
                   >
                     {submitting ? (
                       <>
@@ -362,17 +462,39 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
 
             </form>
           )}
-
         </div>
 
-        {/* Right Side: Chronological Comments Thread */}
-        <div className="w-full md:w-[360px] bg-slate-950/20 p-6 flex flex-col h-full overflow-hidden">
+        {/* Right Column: Tabbed Comments & Live Chat */}
+        <div className="w-full md:w-[380px] bg-slate-950/20 p-6 flex flex-col h-full overflow-hidden">
           
-          <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-4 shrink-0">
-            <div className="flex items-center space-x-2 text-slate-300 font-bold text-sm">
-              <MessageSquare size={16} className="text-indigo-400" />
-              <span>Comments ({comments.length})</span>
+          {/* Tab Selector Headers */}
+          <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4 shrink-0">
+            <div className="flex space-x-4">
+              <button
+                onClick={() => setActiveTab('comments')}
+                className={`pb-1 text-xs font-bold transition border-b-2 flex items-center space-x-1.5 ${
+                  activeTab === 'comments'
+                    ? 'text-indigo-400 border-indigo-500'
+                    : 'text-slate-500 border-transparent hover:text-slate-300'
+                }`}
+              >
+                <MessageSquare size={13} />
+                <span>Comments ({comments.length})</span>
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('chat')}
+                className={`pb-1 text-xs font-bold transition border-b-2 flex items-center space-x-1.5 ${
+                  activeTab === 'chat'
+                    ? 'text-indigo-400 border-indigo-500'
+                    : 'text-slate-500 border-transparent hover:text-slate-300'
+                }`}
+              >
+                <MessagesSquare size={13} />
+                <span>Live Chat</span>
+              </button>
             </div>
+            
             <button 
               onClick={onClose}
               className="hidden md:block p-1 text-slate-400 hover:text-slate-100 hover:bg-slate-800 rounded-lg transition"
@@ -381,67 +503,151 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
             </button>
           </div>
 
-          {/* Comments List */}
-          <div className="flex-1 overflow-y-auto space-y-4 pr-1 scrollbar-thin scrollbar-thumb-slate-950 my-2">
-            {commentsLoading && comments.length === 0 ? (
-              <div className="h-full flex items-center justify-center py-20 text-slate-600">
-                <Loader2 size={18} className="animate-spin text-slate-500" />
-              </div>
-            ) : comments.length > 0 ? (
-              comments.map((comment) => {
-                const isAuthor = comment.createdBy === user?.id;
-                const canDeleteComment = isAuthor || isAdminOrPM;
-                return (
-                  <div key={comment.id} className="bg-slate-900/40 border border-slate-900 p-3 rounded-xl space-y-2 relative group">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-5 h-5 rounded-md bg-indigo-600/10 border border-indigo-500/20 text-indigo-455 flex items-center justify-center text-[8px] font-bold">
-                          {getInitials(comment.createdByName)}
-                        </div>
-                        <span className="text-[10px] font-bold text-slate-350">{comment.createdByName}</span>
-                      </div>
-                      <span className="text-[8px] text-slate-500">{new Date(comment.createdAt).toLocaleDateString()}</span>
-                    </div>
-                    <p className="text-xs text-slate-400 leading-relaxed pr-6">{comment.content}</p>
-                    
-                    {canDeleteComment && (
-                      <button
-                        onClick={() => handleDeleteComment(comment.id)}
-                        className="absolute right-2 bottom-2 text-slate-600 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"
-                        title="Delete Comment"
-                      >
-                        <Trash2 size={10} />
-                      </button>
-                    )}
+          {/* TAB 1: COMMENTS BOARD */}
+          {activeTab === 'comments' && (
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="flex-1 overflow-y-auto space-y-4 pr-1 scrollbar-thin scrollbar-thumb-slate-955 my-2">
+                {commentsLoading && comments.length === 0 ? (
+                  <div className="h-full flex items-center justify-center py-20">
+                    <Loader2 size={18} className="animate-spin text-slate-500" />
                   </div>
-                );
-              })
-            ) : (
-              <div className="h-full flex flex-col items-center justify-center text-center opacity-30 py-20">
-                <MessageSquare size={24} className="text-slate-500 mb-2" />
-                <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider">No comments yet</span>
+                ) : comments.length > 0 ? (
+                  comments.map((comment) => {
+                    const isAuthor = comment.createdBy === user?.id;
+                    const canDeleteComment = isAuthor || isAdminOrPM;
+                    return (
+                      <div key={comment.id} className="bg-slate-900/40 border border-slate-900 p-3 rounded-xl space-y-2 relative group">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <div className="w-5 h-5 bg-indigo-650/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-[8px] font-bold rounded">
+                              {getInitials(comment.createdByName)}
+                            </div>
+                            <span className="text-[10px] font-bold text-slate-350">{comment.createdByName}</span>
+                          </div>
+                          <span className="text-[8px] text-slate-505">{new Date(comment.createdAt).toLocaleDateString()}</span>
+                        </div>
+                        <p className="text-xs text-slate-400 leading-relaxed pr-6">{comment.content}</p>
+                        
+                        {canDeleteComment && (
+                          <button
+                            onClick={() => handleDeleteComment(comment.id)}
+                            className="absolute right-2 bottom-2 text-slate-655 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                            title="Delete Comment"
+                          >
+                            <Trash2 size={10} />
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center text-center opacity-30 py-20">
+                    <MessageSquare size={24} className="text-slate-500 mb-2" />
+                    <span className="text-[10px] font-semibold tracking-wider text-slate-500 uppercase">No comments yet</span>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          {/* New Comment Input Box */}
-          <form onSubmit={handleAddComment} className="mt-4 shrink-0 relative">
-            <input
-              type="text"
-              disabled={commentSubmitting}
-              placeholder="Write a comment..."
-              className="w-full pl-4 pr-10 py-2 bg-slate-950 border border-slate-850 rounded-xl text-xs text-slate-100 placeholder-slate-700 focus:outline-none focus:border-indigo-500 transition"
-              value={newComment}
-              onChange={(e) => setNewComment(e.target.value)}
-            />
-            <button
-              type="submit"
-              disabled={commentSubmitting || !newComment.trim()}
-              className="absolute right-2 top-2 p-1 hover:bg-slate-850 text-indigo-400 hover:text-indigo-300 disabled:opacity-40 transition rounded-lg"
-            >
-              {commentSubmitting ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
-            </button>
-          </form>
+              <form onSubmit={handleAddComment} className="mt-4 shrink-0 relative">
+                <input
+                  type="text"
+                  disabled={commentSubmitting}
+                  placeholder="Write a comment..."
+                  className="w-full pl-4 pr-10 py-2 bg-slate-950 border border-slate-850 rounded-xl text-xs text-slate-100 placeholder-slate-700 focus:outline-none focus:border-indigo-500 transition"
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                />
+                <button
+                  type="submit"
+                  disabled={commentSubmitting || !newComment.trim()}
+                  className="absolute right-2 top-2 p-1 hover:bg-slate-850 text-indigo-400 hover:text-indigo-300 disabled:opacity-40 transition rounded-lg"
+                >
+                  {commentSubmitting ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* TAB 2: LIVE CHAT */}
+          {activeTab === 'chat' && (
+            <div className="flex-1 flex flex-col overflow-hidden">
+              
+              {/* Connection Status Banner */}
+              <div className="flex items-center space-x-1.5 mb-2 px-1">
+                {chatConnected ? (
+                  <>
+                    <Wifi size={12} className="text-emerald-450" />
+                    <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wider">Connected Live</span>
+                  </>
+                ) : (
+                  <>
+                    <WifiOff size={12} className="text-rose-455" />
+                    <span className="text-[9px] font-bold text-rose-400 uppercase tracking-wider">Connecting...</span>
+                  </>
+                )}
+              </div>
+
+              {/* Chat Thread */}
+              <div className="flex-1 overflow-y-auto space-y-3.5 pr-1 scrollbar-thin scrollbar-thumb-slate-955 my-2">
+                {chatLoading && chatMessages.length === 0 ? (
+                  <div className="h-full flex items-center justify-center py-20">
+                    <Loader2 size={18} className="animate-spin text-slate-505" />
+                  </div>
+                ) : chatMessages.length > 0 ? (
+                  chatMessages.map((msg, idx) => {
+                    const isSelf = msg.senderId === user?.id;
+                    return (
+                      <div 
+                        key={msg.id || idx}
+                        className={`flex flex-col max-w-[80%] ${isSelf ? 'ml-auto items-end' : 'mr-auto items-start'}`}
+                      >
+                        {/* Name label if not self */}
+                        {!isSelf && (
+                          <span className="text-[9px] font-bold text-slate-500 mb-1 ml-1">{msg.senderName}</span>
+                        )}
+                        <div className={`p-3 rounded-2xl text-xs leading-relaxed ${
+                          isSelf 
+                            ? 'bg-indigo-600 text-white rounded-tr-none' 
+                            : 'bg-slate-900 text-slate-300 border border-slate-950 rounded-tl-none'
+                        }`}>
+                          <p>{msg.content}</p>
+                        </div>
+                        <span className="text-[7px] text-slate-600 mt-1 px-1">
+                          {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center text-center opacity-30 py-20">
+                    <MessagesSquare size={24} className="text-slate-500 mb-2" />
+                    <span className="text-[10px] font-semibold tracking-wider text-slate-500 uppercase">Start the chat</span>
+                  </div>
+                )}
+                <div ref={chatEndRef} />
+              </div>
+
+              {/* Instant message input */}
+              <form onSubmit={handleSendChatMessage} className="mt-4 shrink-0 relative">
+                <input
+                  type="text"
+                  disabled={!chatConnected}
+                  placeholder={chatConnected ? "Type an instant message..." : "Connecting to chat room..."}
+                  className="w-full pl-4 pr-10 py-2 bg-slate-950 border border-slate-850 rounded-xl text-xs text-slate-100 placeholder-slate-700 focus:outline-none focus:border-indigo-500 transition disabled:opacity-40"
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                />
+                <button
+                  type="submit"
+                  disabled={!chatConnected || !chatInput.trim()}
+                  className="absolute right-2 top-2 p-1 hover:bg-slate-850 text-indigo-400 hover:text-indigo-300 disabled:opacity-40 transition rounded-lg"
+                >
+                  <Send size={12} />
+                </button>
+              </form>
+
+            </div>
+          )}
 
         </div>
 
