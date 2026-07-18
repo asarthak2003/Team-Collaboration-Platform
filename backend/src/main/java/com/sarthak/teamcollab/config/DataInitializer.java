@@ -15,9 +15,14 @@ import com.sarthak.teamcollab.repository.RoleRepository;
 @Component
 public class DataInitializer implements CommandLineRunner {
     private final RoleRepository roleRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public DataInitializer(RoleRepository roleRepository) {
+    public DataInitializer(RoleRepository roleRepository, UserRepository userRepository,
+            PasswordEncoder passwordEncoder) {
         this.roleRepository = roleRepository;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -29,6 +34,31 @@ public class DataInitializer implements CommandLineRunner {
                 role.setName(roleName);
                 roleRepository.save(role);
             }
+        }
+
+        // 3. Create Admin User if not exists
+        String adminEmail = "[EMAIL_ADDRESS]";
+        if (userRepository.findByEmail(adminEmail).isEmpty()) {
+            User admin = new User();
+            admin.setName("Admin User");
+            admin.setUsername("admin");
+            admin.setEmail(adminEmail);
+            admin.setPassword(passwordEncoder.encode("admin"));
+            admin.setActive(true);
+
+            Optional<Role> adminRoleOpt = roleRepository.findByName("ROLE_ADMIN");
+            if (adminRoleOpt.isPresent()) {
+                admin.setRoles(Collections.singleton(adminRoleOpt.get()));
+            } else {
+                // Fallback: try to find by ID if somehow name lookup failed despite creation
+                // But since we just created it, findByName should work.
+                // If not, this is a deeper issue.
+                // For robustness in initialization, we assume role exists.
+                throw new RuntimeException("ROLE_ADMIN not found after creation!");
+            }
+
+            userRepository.save(admin);
+            System.out.println("Admin user created.");
         }
     }
 
