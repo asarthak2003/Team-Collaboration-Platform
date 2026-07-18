@@ -1,5 +1,8 @@
 package com.sarthak.teamcollab.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -8,6 +11,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import com.sarthak.teamcollab.dto.AttachmentResponse;
 import com.sarthak.teamcollab.model.Attachment;
 import com.sarthak.teamcollab.model.Project;
+import com.sarthak.teamcollab.model.Task;
 import com.sarthak.teamcollab.model.User;
 import com.sarthak.teamcollab.repository.AttachmentRepository;
 import com.sarthak.teamcollab.repository.ProjectRepository;
@@ -76,8 +80,21 @@ public class AttachmentService {
         attachment.setTask(task);
         attachment.setUploadedBy(user);
 
-        Attachment savedAttachment = attachmentRepository.save(attachment);
+        Attachment saved = attachmentRepository.save(attachment);
 
+        // log the upload activity
+        String entityType = task != null ? "TASK" : "PROJECT";
+        Long entityId = task != null ? task.getId() : project.getId();
+        activityLogService.logAction(user, "FILE_UPLOADED", entityType, entityId);
+        return mapToResponse(saved);
     }
 
+    public List<AttachmentResponse> getAttachmentsForTask(Long taskId) {
+        return attachmentRepository.findByTaskId(taskId).stream().map(this::mapToResponse).collect(Collectors.toList());
+    }
+
+    public List<AttachmentResponse> getAttachmentsForProject(Long projectId) {
+        return attachmentRepository.findByProjectId(projectId).stream().map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
 }
