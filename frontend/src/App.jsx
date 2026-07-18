@@ -6,6 +6,7 @@ import Register from './pages/Register';
 import DashboardLayout from './components/DashboardLayout';
 import Dashboard from './pages/Dashboard';
 import Projects from './pages/Projects';
+import TaskBoard from './pages/TaskBoard';
 
 // Protected Route wrapper component
 const ProtectedRoute = ({ children }) => {
@@ -27,7 +28,6 @@ const ProtectedRoute = ({ children }) => {
 };
 
 // Simple placeholder page components for our routing targets
-const Tasks = () => <div className="text-slate-400 text-sm">Tasks Kanban Board Coming Soon</div>;
 const Team = () => <div className="text-slate-400 text-sm">Team Directory Page Coming Soon</div>;
 const Profile = () => <div className="text-slate-400 text-sm">Profile Settings Page Coming Soon</div>;
 
@@ -52,7 +52,7 @@ function AppContent() {
         {/* Nested Dashboard Sub-pages */}
         <Route index element={<Dashboard />} />
         <Route path="projects" element={<Projects />} />
-        <Route path="tasks" element={<Tasks />} />
+        <Route path="tasks" element={<TaskBoard />} />
         <Route path="team" element={<Team />} />
         <Route path="profile" element={<Profile />} />
         
