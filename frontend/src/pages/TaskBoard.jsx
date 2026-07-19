@@ -80,6 +80,16 @@ function TaskBoard() {
     }
   }, [location.search]);
 
+  // Auto-open task details from search query params
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const openTaskId = params.get('openTaskId');
+    if (openTaskId) {
+      setSelectedTaskId(parseInt(openTaskId));
+      setIsDetailsOpen(true);
+    }
+  }, [location.search]);
+
   useEffect(() => {
     fetchTasks();
   }, [filters]);

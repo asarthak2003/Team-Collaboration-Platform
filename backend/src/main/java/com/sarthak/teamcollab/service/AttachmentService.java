@@ -49,7 +49,7 @@ public class AttachmentService {
                 attachment.getFileSize(), fileDownloadUri,
                 attachment.getTask() != null ? attachment.getTask().getId() : null,
                 attachment.getProject() != null ? attachment.getProject().getId() : null,
-                attachment.getUploadedBy().getEmail(), attachment.getUploadedAt());
+                attachment.getUploadedBy().getEmail(), attachment.getUploadedBy().getName(), attachment.getUploadedAt());
     }
 
     @Transactional

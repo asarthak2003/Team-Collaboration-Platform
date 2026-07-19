@@ -19,5 +19,6 @@ public class AttachmentResponse {
     private Long taskId;
     private Long projectId;
     private String uploadedBy;
+    private String uploadedByName;
     private LocalDateTime uploadedAt;
 }

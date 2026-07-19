@@ -320,9 +320,13 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
     }
   };
 
-  const handleDownloadAttachment = async (fileName, originalFileName) => {
+  const handleDownloadAttachment = async (fileName, originalFileName, downloadUrl) => {
     try {
-      const response = await api.get(`/api/attachments/download/${fileName}`, {
+      const uniqueName = fileName || (downloadUrl ? downloadUrl.split('/').pop() : '');
+      if (!uniqueName) {
+        throw new Error('Filename could not be extracted');
+      }
+      const response = await api.get(`/api/attachments/download/${uniqueName}`, {
         responseType: 'blob',
       });
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -368,6 +372,12 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
   const getInitials = (name) => {
     if (!name) return '?';
     return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+  };
+
+  const getUploaderName = (file) => {
+    if (file.uploadedByName) return file.uploadedByName;
+    const uploader = users.find(u => u.email === file.uploadedBy);
+    return uploader ? uploader.name : file.uploadedBy;
   };
 
   const formatChatTime = (dateInput) => {
@@ -771,35 +781,49 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
                     <Loader2 size={18} className="animate-spin text-slate-505" />
                   </div>
                 ) : attachments.length > 0 ? (
-                  attachments.map((file) => (
-                    <div key={file.id} className="bg-slate-900/40 border border-slate-900 p-3 rounded-xl flex items-center justify-between group relative">
-                      <div className="flex items-center space-x-2.5 overflow-hidden">
-                        <div className="text-slate-400 p-2 bg-slate-950 rounded-lg shrink-0">
-                          <FileText size={16} />
+                  attachments.map((file) => {
+                    const canDeleteFile = user?.email === file.uploadedBy || user?.role === 'ROLE_ADMIN';
+                    return (
+                      <div key={file.id} className="bg-slate-900/40 border border-slate-900 p-3 rounded-xl flex items-center justify-between group relative">
+                        <div className="flex items-center space-x-2.5 overflow-hidden">
+                          <div className="text-slate-400 p-2 bg-slate-950 rounded-lg shrink-0">
+                            <FileText size={16} />
+                          </div>
+                          <div className="overflow-hidden">
+                            <p className="text-xs font-bold text-slate-300 truncate pr-4">{file.originalFileName}</p>
+                            <div className="flex items-center space-x-1.5 mt-1 text-[9px] text-slate-500 font-medium">
+                              <span>{(file.fileSize / 1024).toFixed(1)} KB</span>
+                              <span>•</span>
+                              <div className="w-3.5 h-3.5 bg-indigo-650/15 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-[7px] font-bold rounded-full shrink-0">
+                                {getInitials(getUploaderName(file))}
+                              </div>
+                              <span className="truncate max-w-[100px]" title={getUploaderName(file)}>
+                                {getUploaderName(file)}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="overflow-hidden">
-                          <p className="text-xs font-bold text-slate-300 truncate pr-4">{file.originalFileName}</p>
-                          <span className="text-[9px] text-slate-500">{(file.fileSize / 1024).toFixed(1)} KB</span>
+                        <div className="flex items-center space-x-1">
+                          <button
+                            onClick={() => handleDownloadAttachment(file.fileName, file.originalFileName, file.downloadUrl)}
+                            className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-indigo-400 rounded-lg transition"
+                            title="Download File"
+                          >
+                            <Download size={14} />
+                          </button>
+                          {canDeleteFile && (
+                            <button
+                              onClick={() => handleDeleteAttachment(file.id)}
+                              className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-rose-500 rounded-lg transition opacity-0 group-hover:opacity-100"
+                              title="Delete File"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
                         </div>
                       </div>
-                      <div className="flex items-center space-x-1">
-                        <button
-                          onClick={() => handleDownloadAttachment(file.fileName, file.originalFileName)}
-                          className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-indigo-400 rounded-lg transition"
-                          title="Download File"
-                        >
-                          <Download size={14} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteAttachment(file.id)}
-                          className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-rose-500 rounded-lg transition opacity-0 group-hover:opacity-100"
-                          title="Delete File"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  ))
+                    );
+                  })
                 ) : (
                   <div className="h-full flex flex-col items-center justify-center text-center opacity-30 py-20">
                     <Paperclip size={24} className="text-slate-500 mb-2" />
