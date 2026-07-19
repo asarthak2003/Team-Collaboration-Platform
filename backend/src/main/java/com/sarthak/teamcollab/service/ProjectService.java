@@ -95,15 +95,15 @@ public class ProjectService {
         return mapToResponse(saved);
     }
 
+
+
     @Transactional
     public ProjectResponse restoreProject(Long id, String userEmail) {
         User user = validateAdminOrProjectManager(userEmail);
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
-        if (!project.isDeleted()) {
-            throw new BadRequestException("Project is not deleted");
-        }
         project.setDeleted(false);
+        project.setStatus("ACTIVE");
         Project saved = projectRepository.save(project);
         activityLogService.logAction(user, "PROJECT_RESTORED", "PROJECT", saved.getId()); // restore log
         return mapToResponse(saved);

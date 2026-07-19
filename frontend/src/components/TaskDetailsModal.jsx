@@ -15,13 +15,17 @@ import {
   ShieldAlert,
   MessagesSquare,
   Wifi,
-  WifiOff
+  WifiOff,
+  Paperclip,
+  Upload,
+  Download,
+  FileText
 } from 'lucide-react';
 
 function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDeleted }) {
   const { user } = useAuth();
 
-  // Right-hand Panel Active Tab ('comments' or 'chat')
+  // Right-hand Panel Active Tab ('comments', 'chat', or 'files')
   const [activeTab, setActiveTab] = useState('comments');
 
   // Task Details States
@@ -36,6 +40,11 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
   const [newComment, setNewComment] = useState('');
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [commentSubmitting, setCommentSubmitting] = useState(false);
+
+  // Attachment States
+  const [attachments, setAttachments] = useState([]);
+  const [attachmentsLoading, setAttachmentsLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   // Chat Room States
   const [chatMessages, setChatMessages] = useState([]);
@@ -84,8 +93,9 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
       setAssignedUserId(t.assignedUserId ? String(t.assignedUserId) : '');
       setDueDate(t.dueDate ? t.dueDate.split('T')[0] : '');
 
-      // Load Comments history
+      // Load Comments & Attachments history
       fetchComments();
+      fetchAttachments();
     } catch (err) {
       console.error('Failed to load task details:', err);
       setError('Failed to retrieve task particulars.');
@@ -118,6 +128,18 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
     }
   };
 
+  const fetchAttachments = async () => {
+    try {
+      setAttachmentsLoading(true);
+      const res = await api.get(`/api/attachments/task/${taskId}`);
+      setAttachments(res.data || []);
+    } catch (err) {
+      console.error('Failed to load attachments:', err);
+    } finally {
+      setAttachmentsLoading(false);
+    }
+  };
+
   // Sync Task Details and reset comments tab
   useEffect(() => {
     if (isOpen && taskId) {
@@ -125,6 +147,13 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
       setActiveTab('comments');
     }
   }, [isOpen, taskId]);
+
+  // Load attachments when switching to Files tab
+  useEffect(() => {
+    if (isOpen && taskId && activeTab === 'files') {
+      fetchAttachments();
+    }
+  }, [isOpen, taskId, activeTab]);
 
   // WebSocket connection managing Chat room subscription
   useEffect(() => {
@@ -141,8 +170,12 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
     // Fetch Chat history first
     fetchChatHistory();
 
+    const token = localStorage.getItem('token');
     const client = new Client({
       webSocketFactory: () => new SockJS('http://localhost:8080/ws-chat'),
+      connectHeaders: {
+        Authorization: `Bearer ${token}`
+      },
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,
@@ -199,7 +232,8 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
         status,
         priority,
         assignedUserId: assignedUserId ? parseInt(assignedUserId) : null,
-        dueDate: dueDate || null
+        dueDate: dueDate || null,
+        projectId: task.projectId
       }
       : {
         title: task.title,
@@ -207,7 +241,8 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
         status,
         priority: task.priority,
         assignedUserId: task.assignedUserId,
-        dueDate: task.dueDate
+        dueDate: task.dueDate,
+        projectId: task.projectId
       };
 
     try {
@@ -259,6 +294,39 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
       fetchComments();
     } catch (err) {
       console.error('Failed to delete comment:', err);
+    }
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      setUploading(true);
+      await api.post(`/api/attachments/upload?taskId=${taskId}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      fetchAttachments();
+    } catch (err) {
+      console.error('Failed to upload file:', err);
+      setError('Failed to upload file.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeleteAttachment = async (attachmentId) => {
+    if (!window.confirm('Are you sure you want to delete this file?')) return;
+    try {
+      await api.delete(`/api/attachments/${attachmentId}`);
+      fetchAttachments();
+    } catch (err) {
+      console.error('Failed to delete file:', err);
     }
   };
 
@@ -491,6 +559,17 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
                 <MessagesSquare size={13} />
                 <span>Live Chat</span>
               </button>
+
+              <button
+                onClick={() => setActiveTab('files')}
+                className={`pb-1 text-xs font-bold transition border-b-2 flex items-center space-x-1.5 ${activeTab === 'files'
+                    ? 'text-indigo-400 border-indigo-500'
+                    : 'text-slate-500 border-transparent hover:text-slate-300'
+                  }`}
+              >
+                <Paperclip size={13} />
+                <span>Files ({attachments.length})</span>
+              </button>
             </div>
 
             <button
@@ -511,16 +590,16 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
                   </div>
                 ) : comments.length > 0 ? (
                   comments.map((comment) => {
-                    const isAuthor = comment.createdBy === user?.id;
+                    const isAuthor = comment.userId === user?.id;
                     const canDeleteComment = isAuthor || isAdminOrPM;
                     return (
                       <div key={comment.id} className="bg-slate-900/40 border border-slate-900 p-3 rounded-xl space-y-2 relative group">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-2">
                             <div className="w-5 h-5 bg-indigo-650/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center text-[8px] font-bold rounded">
-                              {getInitials(comment.createdByName)}
+                              {getInitials(comment.userName)}
                             </div>
-                            <span className="text-[10px] font-bold text-slate-350">{comment.createdByName}</span>
+                            <span className="text-[10px] font-bold text-slate-350">{comment.userName}</span>
                           </div>
                           <span className="text-[8px] text-slate-505">{new Date(comment.createdAt).toLocaleDateString()}</span>
                         </div>
