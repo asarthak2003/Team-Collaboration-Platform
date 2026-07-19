@@ -28,7 +28,8 @@ public class FileStorageService {
         try {
             Files.createDirectories(this.fileStorageLocation);
         } catch (IOException ex) {
-            throw new FileStorageException("Could not create the directory where the uploaded files will be stored.", ex);
+            throw new FileStorageException("Could not create the directory where the uploaded files will be stored.",
+                    ex);
         }
     }
 
@@ -52,6 +53,13 @@ public class FileStorageService {
     public Resource loadFileAsResource(String fileName) {
         try {
             Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
+
+            // ensures that path remains inside base upload directory (prevents directory
+            // traversal attacks)
+            if (!filePath.startsWith(this.fileStorageLocation)) {
+                throw new FileStorageException("Access Denied: File path is outside designated uploads directory");
+            }
+
             Resource resource = new UrlResource(filePath.toUri());
             if (resource.exists()) {
                 return resource;
