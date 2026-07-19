@@ -62,17 +62,12 @@ function Header() {
 
         const [tasksRes, projectsRes] = await Promise.all([
           api.get(`/api/tasks?keyword=${encodeURIComponent(searchQuery)}&size=5`),
-          api.get('/api/projects')
+          api.get(`/api/projects?keyword=${encodeURIComponent(searchQuery)}`)
         ]);
-
-        const queryLower = searchQuery.toLowerCase();
-        const filteredProjects = (projectsRes.data || []).filter(
-          (p) => p.name.toLowerCase().includes(queryLower) || (p.description && p.description.toLowerCase().includes(queryLower))
-        ).slice(0, 5);
 
         setSearchResults({
           tasks: tasksRes.data?.content || [],
-          projects: filteredProjects
+          projects: (projectsRes.data || []).slice(0, 5)
         });
       } catch (err) {
         console.error('Workspace search failed:', err);

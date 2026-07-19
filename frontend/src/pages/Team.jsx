@@ -13,8 +13,8 @@ import {
 function Team() {
   const { user: currentUser } = useAuth();
   
-  // Member list States (fetch all, up to 100, to group them on client)
-  const [members, setMembers] = useState([]);
+  // Grouped members states
+  const [groupedMembers, setGroupedMembers] = useState({ ROLE_ADMIN: [], ROLE_PROJECT_MANAGER: [], ROLE_MEMBER: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
@@ -28,9 +28,9 @@ function Team() {
     try {
       setLoading(true);
       setError('');
-      // Fetch up to 100 members to group them on the frontend
-      const response = await api.get('/api/users?page=0&size=100');
-      setMembers(response.data.content || []);
+      // Fetch grouped users mapping from backend
+      const response = await api.get('/api/users/grouped');
+      setGroupedMembers(response.data || {});
     } catch (err) {
       console.error('Failed to load team directory:', err);
       setError('Failed to fetch workspace team directory.');
@@ -82,10 +82,10 @@ function Team() {
     return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
   };
 
-  // Grouping members by role
-  const admins = members.filter(m => m.role === 'ROLE_ADMIN');
-  const managers = members.filter(m => m.role === 'ROLE_PROJECT_MANAGER');
-  const regularMembers = members.filter(m => m.role === 'ROLE_MEMBER');
+  // Grouping members by role from backend-loaded map
+  const admins = groupedMembers.ROLE_ADMIN || [];
+  const managers = groupedMembers.ROLE_PROJECT_MANAGER || [];
+  const regularMembers = groupedMembers.ROLE_MEMBER || [];
 
   const renderMemberCard = (member) => {
     const currentMemberRole = member.role;

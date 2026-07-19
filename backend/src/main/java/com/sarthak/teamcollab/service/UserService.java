@@ -108,4 +108,10 @@ public class UserService {
         Specification<User> spec = UserSpecification.filterUsers(keyword, roleName);
         return userRepository.findAll(spec, pageable).map(this::mapToResponse);
     }
+
+    public java.util.Map<String, java.util.List<UserResponse>> getGroupedUsers() {
+        return userRepository.findAll().stream()
+                .map(this::mapToResponse)
+                .collect(java.util.stream.Collectors.groupingBy(UserResponse::getRole));
+    }
 }

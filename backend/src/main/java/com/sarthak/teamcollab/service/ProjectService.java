@@ -130,8 +130,17 @@ public class ProjectService {
         return mapToResponse(project);
     }
 
-    public List<ProjectResponse> getAllActiveProjects() {
-        return projectRepository.findByDeletedFalse().stream()
+    public List<ProjectResponse> getAllActiveProjects(String keyword) {
+        List<Project> projects = projectRepository.findByDeletedFalse();
+        if (keyword != null && !keyword.isBlank()) {
+            String lower = keyword.toLowerCase();
+            return projects.stream()
+                    .filter(p -> p.getName().toLowerCase().contains(lower) || 
+                                 (p.getDescription() != null && p.getDescription().toLowerCase().contains(lower)))
+                    .map(this::mapToResponse)
+                    .collect(Collectors.toList());
+        }
+        return projects.stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }

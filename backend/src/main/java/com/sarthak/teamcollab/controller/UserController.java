@@ -44,6 +44,11 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/grouped")
+    public ResponseEntity<java.util.Map<String, java.util.List<UserResponse>>> getGroupedUsers() {
+        return ResponseEntity.ok(userService.getGroupedUsers());
+    }
+
     @GetMapping
     public ResponseEntity<Page<UserResponse>> searchAndFilterUsers(
             @RequestParam(required = false) String keyword,

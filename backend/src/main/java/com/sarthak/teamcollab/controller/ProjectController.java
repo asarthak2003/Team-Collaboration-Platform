@@ -73,7 +73,7 @@ public class ProjectController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ProjectResponse>> getAllActiveProjects() {
-        return ResponseEntity.ok(projectService.getAllActiveProjects());
+    public ResponseEntity<List<ProjectResponse>> getAllActiveProjects(@RequestParam(required = false) String keyword) {
+        return ResponseEntity.ok(projectService.getAllActiveProjects(keyword));
     }
 }
