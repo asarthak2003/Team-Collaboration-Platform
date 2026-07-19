@@ -14,6 +14,9 @@ public class ChatMessageResponse {
     private Long id;
     private Long taskId;
     private String senderUsername;
+    private Long senderId;
+    private String senderName;
     private String content;
     private LocalDateTime sentAt;
+    private LocalDateTime createdAt;
 }

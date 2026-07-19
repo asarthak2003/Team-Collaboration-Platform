@@ -725,6 +725,79 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
             </div>
           )}
 
+          {/* TAB 3: FILES / ATTACHMENTS */}
+          {activeTab === 'files' && (
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="flex-1 overflow-y-auto space-y-3 pr-1 scrollbar-thin scrollbar-thumb-slate-955 my-2">
+                {attachmentsLoading && attachments.length === 0 ? (
+                  <div className="h-full flex items-center justify-center py-20">
+                    <Loader2 size={18} className="animate-spin text-slate-505" />
+                  </div>
+                ) : attachments.length > 0 ? (
+                  attachments.map((file) => (
+                    <div key={file.id} className="bg-slate-900/40 border border-slate-900 p-3 rounded-xl flex items-center justify-between group relative">
+                      <div className="flex items-center space-x-2.5 overflow-hidden">
+                        <div className="text-slate-400 p-2 bg-slate-950 rounded-lg shrink-0">
+                          <FileText size={16} />
+                        </div>
+                        <div className="overflow-hidden">
+                          <p className="text-xs font-bold text-slate-300 truncate pr-4">{file.fileName}</p>
+                          <span className="text-[9px] text-slate-500">{(file.fileSize / 1024).toFixed(1)} KB</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <a
+                          href={`http://localhost:8080/api/attachments/download/${file.fileName}`}
+                          download
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-indigo-400 rounded-lg transition"
+                          title="Download File"
+                        >
+                          <Download size={14} />
+                        </a>
+                        <button
+                          onClick={() => handleDeleteAttachment(file.id)}
+                          className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-rose-500 rounded-lg transition opacity-0 group-hover:opacity-100"
+                          title="Delete File"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center text-center opacity-30 py-20">
+                    <Paperclip size={24} className="text-slate-500 mb-2" />
+                    <span className="text-[10px] font-semibold tracking-wider text-slate-500 uppercase">No attachments yet</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-4 shrink-0">
+                <label className="w-full flex items-center justify-center space-x-2 py-2.5 bg-slate-950 border border-slate-850 hover:bg-slate-850 border-dashed rounded-xl cursor-pointer text-xs font-bold text-indigo-400 hover:text-indigo-300 transition">
+                  {uploading ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      <span>Uploading file...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Upload size={14} />
+                      <span>Upload New File</span>
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    disabled={uploading}
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+            </div>
+          )}
+
         </div>
 
       </div>

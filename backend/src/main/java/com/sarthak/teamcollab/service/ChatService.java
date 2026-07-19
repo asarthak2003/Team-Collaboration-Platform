@@ -30,8 +30,16 @@ public class ChatService {
     }
 
     private ChatMessageResponse mapToResponse(ChatMessage message) {
-        return new ChatMessageResponse(message.getId(), message.getTask().getId(), message.getSender().getName(),
-                message.getContent(), message.getSentAt());
+        return new ChatMessageResponse(
+                message.getId(),
+                message.getTask().getId(),
+                message.getSender().getUsername(),
+                message.getSender().getId(),
+                message.getSender().getName(),
+                message.getContent(),
+                message.getSentAt(),
+                message.getSentAt()
+        );
     }
 
     @Transactional

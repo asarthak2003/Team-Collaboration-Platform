@@ -242,7 +242,7 @@ function Header() {
 
                       <div className="flex-1 space-y-1">
                         <p className={`text-xs leading-relaxed ${notify.read ? 'text-theme-muted' : 'text-theme-text'}`}>
-                          {notify.content}
+                          {notify.message}
                         </p>
                         <span className="text-[8px] text-theme-muted block">
                           {new Date(notify.createdAt).toLocaleDateString()}
