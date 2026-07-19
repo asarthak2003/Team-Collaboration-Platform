@@ -20,6 +20,7 @@ import com.sarthak.teamcollab.repository.AttachmentRepository;
 import com.sarthak.teamcollab.repository.ProjectRepository;
 import com.sarthak.teamcollab.repository.TaskRepository;
 import com.sarthak.teamcollab.repository.UserRepository;
+import com.sarthak.teamcollab.exception.BadRequestException;
 
 @Service
 public class AttachmentService {
@@ -45,16 +46,19 @@ public class AttachmentService {
         String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/attachments/download/")
                 .path(attachment.getFileName()).toUriString();
 
-        return new AttachmentResponse(attachment.getId(), attachment.getFileName(), attachment.getOriginalFileName(), attachment.getFileType(),
+        return new AttachmentResponse(attachment.getId(), attachment.getFileName(), attachment.getOriginalFileName(),
+                attachment.getFileType(),
                 attachment.getFileSize(), fileDownloadUri,
                 attachment.getTask() != null ? attachment.getTask().getId() : null,
                 attachment.getProject() != null ? attachment.getProject().getId() : null,
-                attachment.getUploadedBy().getEmail(), attachment.getUploadedBy().getName(), attachment.getUploadedAt());
+                attachment.getUploadedBy().getEmail(), attachment.getUploadedBy().getName(),
+                attachment.getUploadedAt());
     }
 
     @Transactional
     public AttachmentResponse uploadAttachment(MultipartFile file, Long projectId, Long taskId, String userEmail) {
-        User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         if (projectId == null && taskId == null) {
             throw new BadRequestException("Attachment must be linked to either a project or a task.");
         }
@@ -99,5 +103,28 @@ public class AttachmentService {
     public List<AttachmentResponse> getAttachmentsForProject(Long projectId) {
         return attachmentRepository.findByProjectId(projectId).stream().map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void deleteAttachment(Long id, String userEmail) {
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        Attachment attachment = attachmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Attachment not found"));
+
+        // only uploader or admin can delete
+        if (!attachment.getUploadedBy().getEmail().equals(userEmail)
+                && !user.getRole().getName().equals("ROLE_ADMIN")) {
+            throw new BadRequestException("You do not have permission to delete this attachment.");
+        }
+        // delete from disk
+        fileStorageService.deleteFile(attachment.getFileName());
+        // delete from db
+        attachmentRepository.delete(attachment);
+
+        // log the deletion activity
+        String entityType = attachment.getTask() != null ? "TASK" : "PROJECT";
+        Long entityId = attachment.getTask() != null ? attachment.getTask().getId() : attachment.getProject().getId();
+        activityLogService.logAction(user, "FILE_DELETED", entityType, entityId);
     }
 }
