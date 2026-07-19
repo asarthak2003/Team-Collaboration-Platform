@@ -68,7 +68,7 @@ function Header() {
 
     stompClient.onConnect = () => {
       console.log('Connected to WebSocket server');
-      
+
       stompClient.subscribe('/topic/notifications/' + user.email, (message) => {
         const received = JSON.parse(message.body);
         setNotifications((prev) => [received, ...prev]);
@@ -130,7 +130,7 @@ function Header() {
 
   return (
     <header className="h-16 border-b border-theme-border bg-theme-card/45 backdrop-blur-md sticky top-0 z-40 flex items-center justify-between px-6">
-      
+
       {/* Page Title */}
       <div>
         <h1 className="text-lg font-bold text-theme-text tracking-tight">
@@ -140,7 +140,7 @@ function Header() {
 
       {/* Action Controls */}
       <div className="flex items-center space-x-4">
-        
+
         {/* Mock Search Bar */}
         <div className="relative hidden md:block">
           <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-theme-muted">
@@ -157,11 +157,10 @@ function Header() {
         <div className="relative" ref={themeDropdownRef}>
           <button
             onClick={() => setIsThemeOpen(!isThemeOpen)}
-            className={`p-2 rounded-lg transition-all ${
-              isThemeOpen 
-                ? 'text-indigo-500 bg-theme-bg' 
+            className={`p-2 rounded-lg transition-all ${isThemeOpen
+                ? 'text-indigo-500 bg-theme-bg'
                 : 'text-theme-muted hover:text-theme-text hover:bg-theme-bg/60'
-            }`}
+              }`}
           >
             {theme === 'light' ? <Sun size={18} /> : theme === 'dark' ? <Moon size={18} /> : <Laptop size={18} />}
           </button>
@@ -171,9 +170,8 @@ function Header() {
               <button
                 type="button"
                 onClick={() => { setTheme('light'); setIsThemeOpen(false); }}
-                className={`w-full text-left px-3 py-2 text-xs font-semibold rounded-xl flex items-center space-x-2 transition ${
-                  theme === 'light' ? 'bg-indigo-650 text-white' : 'text-theme-muted hover:bg-theme-bg hover:text-theme-text'
-                }`}
+                className={`w-full text-left px-3 py-2 text-xs font-semibold rounded-xl flex items-center space-x-2 transition ${theme === 'light' ? 'bg-indigo-650 text-white' : 'text-theme-muted hover:bg-theme-bg hover:text-theme-text'
+                  }`}
               >
                 <Sun size={14} />
                 <span>Light Mode</span>
@@ -181,9 +179,8 @@ function Header() {
               <button
                 type="button"
                 onClick={() => { setTheme('dark'); setIsThemeOpen(false); }}
-                className={`w-full text-left px-3 py-2 text-xs font-semibold rounded-xl flex items-center space-x-2 transition ${
-                  theme === 'dark' ? 'bg-indigo-650 text-white' : 'text-theme-muted hover:bg-theme-bg hover:text-theme-text'
-                }`}
+                className={`w-full text-left px-3 py-2 text-xs font-semibold rounded-xl flex items-center space-x-2 transition ${theme === 'dark' ? 'bg-indigo-650 text-white' : 'text-theme-muted hover:bg-theme-bg hover:text-theme-text'
+                  }`}
               >
                 <Moon size={14} />
                 <span>Dark Mode</span>
@@ -191,9 +188,8 @@ function Header() {
               <button
                 type="button"
                 onClick={() => { setTheme('system'); setIsThemeOpen(false); }}
-                className={`w-full text-left px-3 py-2 text-xs font-semibold rounded-xl flex items-center space-x-2 transition ${
-                  theme === 'system' ? 'bg-indigo-650 text-white' : 'text-theme-muted hover:bg-theme-bg hover:text-theme-text'
-                }`}
+                className={`w-full text-left px-3 py-2 text-xs font-semibold rounded-xl flex items-center space-x-2 transition ${theme === 'system' ? 'bg-indigo-650 text-white' : 'text-theme-muted hover:bg-theme-bg hover:text-theme-text'
+                  }`}
               >
                 <Laptop size={14} />
                 <span>System Default</span>
@@ -204,11 +200,10 @@ function Header() {
 
         {/* Notifications Dropdown Container */}
         <div className="relative" ref={dropdownRef}>
-          <button 
+          <button
             onClick={() => setIsOpen(!isOpen)}
-            className={`relative p-2 rounded-lg transition-all ${
-              isOpen ? 'text-indigo-500 bg-theme-bg' : 'text-theme-muted hover:text-theme-text hover:bg-theme-bg/60'
-            }`}
+            className={`relative p-2 rounded-lg transition-all ${isOpen ? 'text-indigo-500 bg-theme-bg' : 'text-theme-muted hover:text-theme-text hover:bg-theme-bg/60'
+              }`}
           >
             <Bell size={18} />
             {unreadCount > 0 && (
@@ -221,7 +216,7 @@ function Header() {
           {/* Dropdown overlay panel */}
           {isOpen && (
             <div className="absolute right-0 mt-3 w-80 bg-theme-card border border-theme-border rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150 z-50">
-              
+
               <div className="px-4 py-3 border-b border-theme-border flex items-center justify-between bg-theme-bg/40">
                 <span className="text-xs font-bold text-theme-text">Recent Notifications</span>
                 {unreadCount > 0 && (
@@ -235,18 +230,16 @@ function Header() {
               <div className="max-h-[300px] overflow-y-auto divide-y divide-theme-border scrollbar-thin scrollbar-thumb-theme-bg">
                 {notifications.length > 0 ? (
                   notifications.map((notify) => (
-                    <div 
+                    <div
                       key={notify.id}
-                      className={`p-4 flex items-start space-x-3 transition-colors ${
-                        notify.read ? 'hover:bg-theme-bg/60' : 'bg-indigo-500/5 hover:bg-indigo-500/10'
-                      }`}
+                      className={`p-4 flex items-start space-x-3 transition-colors ${notify.read ? 'hover:bg-theme-bg/60' : 'bg-indigo-500/5 hover:bg-indigo-500/10'
+                        }`}
                     >
-                      <div className={`p-1.5 rounded-lg shrink-0 mt-0.5 ${
-                        notify.read ? 'bg-theme-bg text-theme-muted' : 'bg-indigo-550/10 text-indigo-500'
-                      }`}>
+                      <div className={`p-1.5 rounded-lg shrink-0 mt-0.5 ${notify.read ? 'bg-theme-bg text-theme-muted' : 'bg-indigo-550/10 text-indigo-500'
+                        }`}>
                         <AlertCircle size={14} />
                       </div>
-                      
+
                       <div className="flex-1 space-y-1">
                         <p className={`text-xs leading-relaxed ${notify.read ? 'text-theme-muted' : 'text-theme-text'}`}>
                           {notify.content}

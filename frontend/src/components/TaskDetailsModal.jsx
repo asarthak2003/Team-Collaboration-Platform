@@ -3,24 +3,24 @@ import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { Client } from '@stomp/stompjs';
 import SockJS from 'sockjs-client';
-import { 
-  X, 
-  Loader2, 
-  MessageSquare, 
-  Trash2, 
-  Send, 
-  AlertCircle, 
-  Calendar, 
-  User, 
-  ShieldAlert, 
-  MessagesSquare, 
-  Wifi, 
-  WifiOff 
+import {
+  X,
+  Loader2,
+  MessageSquare,
+  Trash2,
+  Send,
+  AlertCircle,
+  Calendar,
+  User,
+  ShieldAlert,
+  MessagesSquare,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 
 function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDeleted }) {
   const { user } = useAuth();
-  
+
   // Right-hand Panel Active Tab ('comments' or 'chat')
   const [activeTab, setActiveTab] = useState('comments');
 
@@ -71,7 +71,7 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
         api.get(`/api/tasks/${taskId}`),
         api.get('/api/users?size=100')
       ]);
-      
+
       const t = taskRes.data;
       setTask(t);
       setUsers(userRes.data.content || []);
@@ -192,23 +192,23 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
     setSubmitting(true);
     setError('');
 
-    const payload = canModifyAll 
+    const payload = canModifyAll
       ? {
-          title,
-          description,
-          status,
-          priority,
-          assignedUserId: assignedUserId ? parseInt(assignedUserId) : null,
-          dueDate: dueDate || null
-        }
+        title,
+        description,
+        status,
+        priority,
+        assignedUserId: assignedUserId ? parseInt(assignedUserId) : null,
+        dueDate: dueDate || null
+      }
       : {
-          title: task.title,
-          description: task.description,
-          status,
-          priority: task.priority,
-          assignedUserId: task.assignedUserId,
-          dueDate: task.dueDate
-        };
+        title: task.title,
+        description: task.description,
+        status,
+        priority: task.priority,
+        assignedUserId: task.assignedUserId,
+        dueDate: task.dueDate
+      };
 
     try {
       await api.put(`/api/tasks/${taskId}`, payload);
@@ -286,12 +286,12 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
       <div className="w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 flex flex-col md:flex-row h-[85vh] max-h-[700px]">
-        
+
         {/* Left Column: Edit Form */}
         <div className="flex-1 p-6 border-b md:border-b-0 md:border-r border-slate-850 flex flex-col overflow-y-auto scrollbar-thin scrollbar-thumb-slate-950">
           <div className="flex items-center justify-between pb-4 border-b border-slate-800 mb-6">
             <h3 className="font-bold text-slate-100">Task Details</h3>
-            <button 
+            <button
               onClick={onClose}
               className="p-1 md:hidden text-slate-400 hover:text-slate-100 hover:bg-slate-850 rounded-lg transition"
             >
@@ -306,7 +306,7 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
             </div>
           ) : (
             <form onSubmit={handleUpdateTask} className="space-y-4 flex-1 flex flex-col justify-between">
-              
+
               <div className="space-y-4">
                 {error && (
                   <div className="flex items-center space-x-2 bg-rose-950/40 border border-rose-900/50 p-4 rounded-xl text-rose-400 text-xs">
@@ -433,7 +433,7 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
                 ) : (
                   <div></div>
                 )}
-                
+
                 <div className="flex items-center space-x-3">
                   <button
                     type="button"
@@ -466,36 +466,34 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
 
         {/* Right Column: Tabbed Comments & Live Chat */}
         <div className="w-full md:w-[380px] bg-slate-950/20 p-6 flex flex-col h-full overflow-hidden">
-          
+
           {/* Tab Selector Headers */}
           <div className="flex items-center justify-between pb-3 border-b border-slate-800 mb-4 shrink-0">
             <div className="flex space-x-4">
               <button
                 onClick={() => setActiveTab('comments')}
-                className={`pb-1 text-xs font-bold transition border-b-2 flex items-center space-x-1.5 ${
-                  activeTab === 'comments'
+                className={`pb-1 text-xs font-bold transition border-b-2 flex items-center space-x-1.5 ${activeTab === 'comments'
                     ? 'text-indigo-400 border-indigo-500'
                     : 'text-slate-500 border-transparent hover:text-slate-300'
-                }`}
+                  }`}
               >
                 <MessageSquare size={13} />
                 <span>Comments ({comments.length})</span>
               </button>
-              
+
               <button
                 onClick={() => setActiveTab('chat')}
-                className={`pb-1 text-xs font-bold transition border-b-2 flex items-center space-x-1.5 ${
-                  activeTab === 'chat'
+                className={`pb-1 text-xs font-bold transition border-b-2 flex items-center space-x-1.5 ${activeTab === 'chat'
                     ? 'text-indigo-400 border-indigo-500'
                     : 'text-slate-500 border-transparent hover:text-slate-300'
-                }`}
+                  }`}
               >
                 <MessagesSquare size={13} />
                 <span>Live Chat</span>
               </button>
             </div>
-            
-            <button 
+
+            <button
               onClick={onClose}
               className="hidden md:block p-1 text-slate-400 hover:text-slate-100 hover:bg-slate-800 rounded-lg transition"
             >
@@ -527,7 +525,7 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
                           <span className="text-[8px] text-slate-505">{new Date(comment.createdAt).toLocaleDateString()}</span>
                         </div>
                         <p className="text-xs text-slate-400 leading-relaxed pr-6">{comment.content}</p>
-                        
+
                         {canDeleteComment && (
                           <button
                             onClick={() => handleDeleteComment(comment.id)}
@@ -571,7 +569,7 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
           {/* TAB 2: LIVE CHAT */}
           {activeTab === 'chat' && (
             <div className="flex-1 flex flex-col overflow-hidden">
-              
+
               {/* Connection Status Banner */}
               <div className="flex items-center space-x-1.5 mb-2 px-1">
                 {chatConnected ? (
@@ -597,7 +595,7 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
                   chatMessages.map((msg, idx) => {
                     const isSelf = msg.senderId === user?.id;
                     return (
-                      <div 
+                      <div
                         key={msg.id || idx}
                         className={`flex flex-col max-w-[80%] ${isSelf ? 'ml-auto items-end' : 'mr-auto items-start'}`}
                       >
@@ -605,11 +603,10 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
                         {!isSelf && (
                           <span className="text-[9px] font-bold text-slate-500 mb-1 ml-1">{msg.senderName}</span>
                         )}
-                        <div className={`p-3 rounded-2xl text-xs leading-relaxed ${
-                          isSelf 
-                            ? 'bg-indigo-600 text-white rounded-tr-none' 
+                        <div className={`p-3 rounded-2xl text-xs leading-relaxed ${isSelf
+                            ? 'bg-indigo-600 text-white rounded-tr-none'
                             : 'bg-slate-900 text-slate-300 border border-slate-950 rounded-tl-none'
-                        }`}>
+                          }`}>
                           <p>{msg.content}</p>
                         </div>
                         <span className="text-[7px] text-slate-600 mt-1 px-1">
