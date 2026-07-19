@@ -8,7 +8,7 @@ public class TeamcollabApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(TeamcollabApplication.class, args);
-		System.out.println("HEllo");
+		System.out.println("Team Collab Project Started");
 	}
 
 }

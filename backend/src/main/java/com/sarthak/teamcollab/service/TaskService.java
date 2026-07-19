@@ -70,6 +70,7 @@ public class TaskService {
         Project project = projectRepository.findByIdAndDeletedFalse(request.getProjectId())
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found or deleted"));
         validateProjectManagerProjectScope(project, creator);
+        validateProjectIsNotArchived(project);
 
         Task task = new Task();
         task.setTitle(request.getTitle());
@@ -116,6 +117,7 @@ public class TaskService {
 
         String role = user.getRole().getName();
         if ("ROLE_MEMBER".equals(role)) {
+            validateProjectIsNotArchived(task.getProject());
             if (task.getAssignedUser() == null || !task.getAssignedUser().getId().equals(user.getId())) {
                 throw new AccessDeniedException("Access denied: Members can only update their own assigned tasks");
             }
@@ -124,6 +126,7 @@ public class TaskService {
             }
         } else if ("ROLE_ADMIN".equals(role) || "ROLE_PROJECT_MANAGER".equals(role)) {
             validateProjectManagerProjectScope(task.getProject(), user);
+            validateProjectIsNotArchived(task.getProject());
             if (request.getTitle() != null)
                 task.setTitle(request.getTitle());
             if (request.getDescription() != null)
@@ -166,6 +169,7 @@ public class TaskService {
         Task task = taskRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found or deleted"));
         validateProjectManagerProjectScope(task.getProject(), admin);
+        validateProjectIsNotArchived(task.getProject());
         User assignee = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Assignee user not found"));
 
@@ -190,6 +194,7 @@ public class TaskService {
         Task task = taskRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found or already deleted"));
         validateProjectManagerProjectScope(task.getProject(), admin);
+        validateProjectIsNotArchived(task.getProject());
         task.setDeleted(true);
         Task saved = taskRepository.save(task);
         activityLogService.logAction(admin, "TASK_DELETED", "TASK", saved.getId());
@@ -201,6 +206,7 @@ public class TaskService {
         User admin = validateAdminOrProjectManager(userEmail);
         Task task = taskRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Task not found"));
         validateProjectManagerProjectScope(task.getProject(), admin);
+        validateProjectIsNotArchived(task.getProject());
         if (!task.isDeleted()) {
             throw new BadRequestException("Task is not deleted");
         }
@@ -254,6 +260,12 @@ public class TaskService {
             if (!project.getCreatedBy().getId().equals(user.getId())) {
                 throw new org.springframework.security.access.AccessDeniedException("Access denied: You are not the manager of this project.");
             }
+        }
+    }
+
+    private void validateProjectIsNotArchived(Project project) {
+        if ("ARCHIVED".equals(project.getStatus())) {
+            throw new BadRequestException("Cannot modify tasks in an archived project.");
         }
     }
 }

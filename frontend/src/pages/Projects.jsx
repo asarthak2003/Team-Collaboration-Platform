@@ -45,6 +45,16 @@ function Projects() {
     fetchProjects();
   }, []);
 
+  // Auto-dismiss error alert after 5 seconds
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError('');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error]);
+
   // Save (Create or Update) handler callback
   const handleSaveProject = async (projectData) => {
     try {
@@ -65,32 +75,35 @@ function Projects() {
 
   // Archive Project handler
   const handleArchiveProject = async (id) => {
+    setError('');
     try {
       await api.put(`/api/projects/${id}/archive`);
       fetchProjects();
     } catch (err) {
-      setError('Failed to archive project.');
+      setError(err.response?.data?.error || err.response?.data?.message || 'Failed to archive project.');
     }
   };
 
   // Restore Project handler
   const handleRestoreProject = async (id) => {
+    setError('');
     try {
       await api.put(`/api/projects/${id}/restore`);
       fetchProjects();
     } catch (err) {
-      setError('Failed to restore project.');
+      setError(err.response?.data?.error || err.response?.data?.message || 'Failed to restore project.');
     }
   };
 
   // Delete Project handler (Soft-delete)
   const handleDeleteProject = async (id) => {
+    setError('');
     if (!window.confirm('Are you sure you want to delete this project? All associated tasks will be lost.')) return;
     try {
       await api.delete(`/api/projects/${id}`);
       fetchProjects();
     } catch (err) {
-      setError('Failed to delete project.');
+      setError(err.response?.data?.error || err.response?.data?.message || 'Failed to delete project.');
     }
   };
 
