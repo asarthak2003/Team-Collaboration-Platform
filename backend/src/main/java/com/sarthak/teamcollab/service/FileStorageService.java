@@ -71,4 +71,15 @@ public class FileStorageService {
         }
     }
 
+    public void deleteFile(String fileName) {
+        try {
+            Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
+            if (filePath.startsWith(this.fileStorageLocation)) {
+                java.nio.file.Files.deleteIfExists(filePath);
+            }
+        } catch (java.io.IOException ex) {
+            throw new com.sarthak.teamcollab.exception.FileStorageException("Could not delete file " + fileName, ex);
+        }
+    }
+
 }

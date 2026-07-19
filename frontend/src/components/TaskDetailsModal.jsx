@@ -430,6 +430,18 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
                   </div>
                 )}
 
+                {/* Project Scope & Assigned By metadata */}
+                <div className="grid grid-cols-2 gap-4 bg-slate-955/20 border border-slate-850 p-3 rounded-xl mb-4">
+                  <div>
+                    <span className="block text-[8px] uppercase font-bold text-slate-500 tracking-wider">Project Scope</span>
+                    <span className="text-xs font-semibold text-slate-300">{task?.projectName || 'No Project'}</span>
+                  </div>
+                  <div>
+                    <span className="block text-[8px] uppercase font-bold text-slate-500 tracking-wider">Assigned By</span>
+                    <span className="text-xs font-semibold text-slate-300">{task?.createdByName || 'System'}</span>
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
                     Task Title
