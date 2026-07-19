@@ -45,7 +45,8 @@ public class TaskService {
     }
 
     private User validateAdminOrProjectManager(String email) {
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User Not Found"));
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User Not Found"));
         String role = user.getRole().getName();
         if (!"ROLE_ADMIN".equals(role) && !"ROLE_PROJECT_MANAGER".equals(role)) {
             throw new AccessDeniedException("Access denied: Only Admin or Project Manager can perform this action");
@@ -95,8 +96,7 @@ public class TaskService {
             notificationService.createAndSendNotification(
                     saved.getAssignedUser(),
                     "You have been assigned to task: " + saved.getTitle(),
-                    "/tasks/" + saved.getId()
-            );
+                    "/tasks/" + saved.getId());
         }
 
         return mapToResponse(saved);
@@ -104,10 +104,11 @@ public class TaskService {
 
     @Transactional
     public TaskResponse updateTask(Long id, TaskRequest request, String userEmail) {
-        User user = userRepository.findByEmail(userEmail).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         Task task = taskRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found or deleted"));
-        
+
         // Capture old assignee
         User oldAssignee = task.getAssignedUser();
 
@@ -149,8 +150,7 @@ public class TaskService {
                 notificationService.createAndSendNotification(
                         newAssignee,
                         "You have been assigned to task: " + saved.getTitle(),
-                        "/tasks/" + saved.getId()
-                );
+                        "/tasks/" + saved.getId());
             }
         }
 
@@ -174,8 +174,7 @@ public class TaskService {
             notificationService.createAndSendNotification(
                     assignee,
                     "You have been assigned to task: " + task.getTitle(),
-                    "/tasks/" + task.getId()
-            );
+                    "/tasks/" + task.getId());
         }
 
         return mapToResponse(task);
@@ -217,7 +216,14 @@ public class TaskService {
                 .collect(Collectors.toList());
     }
 
-    public org.springframework.data.domain.Page<TaskResponse> searchAndFilterTasks(String keyword, String statusStr, String priorityStr,
+    public TaskResponse getTaskById(long id) {
+        Task task = taskRepository.findByIdAndDeletedFalse(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found or deleted"));
+        return mapToResponse(task);
+    }
+
+    public Page<TaskResponse> searchAndFilterTasks(String keyword, String statusStr,
+            String priorityStr,
             Long assigneeeId, int page, int size, String sortBy, String sortDir) {
         TaskStatus status = null;
         if (statusStr != null && !statusStr.isBlank()) {

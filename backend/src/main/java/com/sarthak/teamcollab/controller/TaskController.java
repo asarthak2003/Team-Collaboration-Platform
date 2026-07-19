@@ -30,7 +30,7 @@ public class TaskController {
     public ResponseEntity<?> createTask(
             @Valid @RequestBody TaskRequest request,
             Principal principal) {
-                String userEmail = principal.getName();
+        String userEmail = principal.getName();
         TaskResponse response = taskService.createTask(request, userEmail);
         return ResponseEntity.ok(response);
     }
@@ -40,7 +40,7 @@ public class TaskController {
             @PathVariable Long id,
             @Valid @RequestBody TaskRequest request,
             Principal principal) {
-                String userEmail = principal.getName();
+        String userEmail = principal.getName();
         TaskResponse response = taskService.updateTask(id, request, userEmail);
         return ResponseEntity.ok(response);
     }
@@ -50,7 +50,7 @@ public class TaskController {
             @PathVariable Long id,
             @PathVariable Long userId,
             Principal principal) {
-                String userEmail = principal.getName();
+        String userEmail = principal.getName();
         TaskResponse response = taskService.assignTask(id, userId, userEmail);
         return ResponseEntity.ok(response);
     }
@@ -59,7 +59,7 @@ public class TaskController {
     public ResponseEntity<?> deleteTask(
             @PathVariable Long id,
             Principal principal) {
-                String userEmail = principal.getName();
+        String userEmail = principal.getName();
         TaskResponse response = taskService.deleteTask(id, userEmail);
         return ResponseEntity.ok(response);
     }
@@ -68,7 +68,7 @@ public class TaskController {
     public ResponseEntity<?> restoreTask(
             @PathVariable Long id,
             Principal principal) {
-                String userEmail = principal.getName();
+        String userEmail = principal.getName();
         TaskResponse response = taskService.restoreTask(id, userEmail);
         return ResponseEntity.ok(response);
     }
@@ -85,10 +85,15 @@ public class TaskController {
 
     @GetMapping("/my-tasks")
     public ResponseEntity<?> getMyTasks(Principal principal) {
-                String userEmail = principal.getName();
+        String userEmail = principal.getName();
         User user = userRepository.findByEmail(userEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         return ResponseEntity.ok(taskService.getTasksAssignedToUser(user.getId()));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<TaskResponse> getTaskById(@PathVariable Long id) {
+        return ResponseEntity.ok(taskService.getTaskById(id));
     }
 
     @GetMapping
