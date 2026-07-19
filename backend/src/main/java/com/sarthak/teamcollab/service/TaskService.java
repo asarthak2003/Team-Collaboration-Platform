@@ -69,6 +69,7 @@ public class TaskService {
         User creator = validateAdminOrProjectManager(userEmail);
         Project project = projectRepository.findByIdAndDeletedFalse(request.getProjectId())
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found or deleted"));
+        validateProjectManagerProjectScope(project, creator);
 
         Task task = new Task();
         task.setTitle(request.getTitle());
@@ -122,6 +123,7 @@ public class TaskService {
                 task.setStatus(TaskStatus.valueOf(request.getStatus().toUpperCase()));
             }
         } else if ("ROLE_ADMIN".equals(role) || "ROLE_PROJECT_MANAGER".equals(role)) {
+            validateProjectManagerProjectScope(task.getProject(), user);
             if (request.getTitle() != null)
                 task.setTitle(request.getTitle());
             if (request.getDescription() != null)
@@ -163,6 +165,7 @@ public class TaskService {
         User admin = validateAdminOrProjectManager(userEmail);
         Task task = taskRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found or deleted"));
+        validateProjectManagerProjectScope(task.getProject(), admin);
         User assignee = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Assignee user not found"));
 
@@ -186,6 +189,7 @@ public class TaskService {
         User admin = validateAdminOrProjectManager(userEmail);
         Task task = taskRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found or already deleted"));
+        validateProjectManagerProjectScope(task.getProject(), admin);
         task.setDeleted(true);
         Task saved = taskRepository.save(task);
         activityLogService.logAction(admin, "TASK_DELETED", "TASK", saved.getId());
@@ -196,6 +200,7 @@ public class TaskService {
     public TaskResponse restoreTask(Long id, String userEmail) {
         User admin = validateAdminOrProjectManager(userEmail);
         Task task = taskRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Task not found"));
+        validateProjectManagerProjectScope(task.getProject(), admin);
         if (!task.isDeleted()) {
             throw new BadRequestException("Task is not deleted");
         }
@@ -242,5 +247,13 @@ public class TaskService {
 
         return taskRepository.findAll(spec, pageable).map(this::mapToResponse);
 
+    }
+
+    private void validateProjectManagerProjectScope(Project project, User user) {
+        if ("ROLE_PROJECT_MANAGER".equals(user.getRole().getName())) {
+            if (!project.getCreatedBy().getId().equals(user.getId())) {
+                throw new org.springframework.security.access.AccessDeniedException("Access denied: You are not the manager of this project.");
+            }
+        }
     }
 }

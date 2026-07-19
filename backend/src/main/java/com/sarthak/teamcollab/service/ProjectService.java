@@ -74,6 +74,7 @@ public class ProjectService {
         User user = validateAdminOrProjectManager(userEmail);
         Project project = projectRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found or deleted"));
+        validateProjectOwnership(project, user);
         project.setName(request.getName());
         project.setDescription(request.getDescription());
         if (request.getStatus() != null && !request.getStatus().isBlank()) {
@@ -89,6 +90,7 @@ public class ProjectService {
         User user = validateAdminOrProjectManager(userEmail);
         Project project = projectRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found or already deleted"));
+        validateProjectOwnership(project, user);
         project.setDeleted(true);
         Project saved = projectRepository.save(project);
         activityLogService.logAction(user, "PROJECT_DELETED", "PROJECT", saved.getId()); // deletion log
@@ -102,6 +104,7 @@ public class ProjectService {
         User user = validateAdminOrProjectManager(userEmail);
         Project project = projectRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
+        validateProjectOwnership(project, user);
         project.setDeleted(false);
         project.setStatus("ACTIVE");
         Project saved = projectRepository.save(project);
@@ -113,7 +116,8 @@ public class ProjectService {
     public ProjectResponse archiveProject(Long id, String userEmail) {
         User user = validateAdminOrProjectManager(userEmail);
         Project project = projectRepository.findByIdAndDeletedFalse(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Project not found or deleted"));
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
+        validateProjectOwnership(project, user);
         project.setStatus("ARCHIVED");
         Project saved = projectRepository.save(project);
         activityLogService.logAction(user, "PROJECT_ARCHIVED", "PROJECT", saved.getId()); // archive log
@@ -130,6 +134,14 @@ public class ProjectService {
         return projectRepository.findByDeletedFalse().stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
+    }
+
+    private void validateProjectOwnership(Project project, User user) {
+        if ("ROLE_PROJECT_MANAGER".equals(user.getRole().getName())) {
+            if (!project.getCreatedBy().getId().equals(user.getId())) {
+                throw new BadRequestException("You do not have permission to manage this project.");
+            }
+        }
     }
 
 }

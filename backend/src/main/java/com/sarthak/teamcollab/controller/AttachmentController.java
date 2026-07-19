@@ -3,10 +3,12 @@ package com.sarthak.teamcollab.controller;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,7 +37,7 @@ public class AttachmentController {
     public ResponseEntity<?> uploadFile(@RequestParam("file") MultipartFile file,
             @RequestParam(required = false) Long projectId, @RequestParam(required = false) Long taskId,
             Principal principal) {
-                String email = principal.getName();
+        String email = principal.getName();
         AttachmentResponse response = attachmentService.uploadAttachment(file, projectId, taskId, email);
         return ResponseEntity.ok(response);
     }
@@ -73,4 +75,11 @@ public class AttachmentController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteAttachment(@PathVariable Long id, Principal principal) {
+        attachmentService.deleteAttachment(id, principal.getName());
+        return ResponseEntity.ok(Map.of("message", "Attachment deleted successfully"));
+    }
+
 }
