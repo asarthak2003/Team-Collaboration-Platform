@@ -320,6 +320,25 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
     }
   };
 
+  const handleDownloadAttachment = async (fileName, originalFileName) => {
+    try {
+      const response = await api.get(`/api/attachments/download/${fileName}`, {
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', originalFileName);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Failed to download file:', err);
+      setError('Failed to download file.');
+    }
+  };
+
   const handleDeleteAttachment = async (attachmentId) => {
     if (!window.confirm('Are you sure you want to delete this file?')) return;
     try {
@@ -349,6 +368,24 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
   const getInitials = (name) => {
     if (!name) return '?';
     return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+  };
+
+  const formatChatTime = (dateInput) => {
+    if (!dateInput) return '';
+    try {
+      let date;
+      if (Array.isArray(dateInput)) {
+        // Handle Spring Boot Jackson default LocalDateTime serialization as integer array [year, month, day, hour, minute...]
+        const [year, month, day, hour, minute] = dateInput;
+        date = new Date(year, month - 1, day, hour, minute);
+      } else {
+        date = new Date(dateInput);
+      }
+      if (isNaN(date.getTime())) return '';
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      return '';
+    }
   };
 
   return (
@@ -689,7 +726,7 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
                           <p>{msg.content}</p>
                         </div>
                         <span className="text-[7px] text-slate-600 mt-1 px-1">
-                          {new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {formatChatTime(msg.createdAt || msg.sentAt)}
                         </span>
                       </div>
                     );
@@ -741,21 +778,18 @@ function TaskDetailsModal({ isOpen, onClose, taskId, onTaskUpdated, onTaskDelete
                           <FileText size={16} />
                         </div>
                         <div className="overflow-hidden">
-                          <p className="text-xs font-bold text-slate-300 truncate pr-4">{file.fileName}</p>
+                          <p className="text-xs font-bold text-slate-300 truncate pr-4">{file.originalFileName}</p>
                           <span className="text-[9px] text-slate-500">{(file.fileSize / 1024).toFixed(1)} KB</span>
                         </div>
                       </div>
                       <div className="flex items-center space-x-1">
-                        <a
-                          href={`http://localhost:8080/api/attachments/download/${file.fileName}`}
-                          download
-                          target="_blank"
-                          rel="noopener noreferrer"
+                        <button
+                          onClick={() => handleDownloadAttachment(file.fileName, file.originalFileName)}
                           className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-indigo-400 rounded-lg transition"
                           title="Download File"
                         >
                           <Download size={14} />
-                        </a>
+                        </button>
                         <button
                           onClick={() => handleDeleteAttachment(file.id)}
                           className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-rose-500 rounded-lg transition opacity-0 group-hover:opacity-100"

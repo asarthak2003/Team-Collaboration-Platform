@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AttachmentResponse {
     private Long id;
+    private String fileName;
     private String originalFileName;
     private String fileType;
     private Long fileSize;

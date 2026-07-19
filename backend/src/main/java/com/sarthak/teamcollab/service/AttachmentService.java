@@ -45,7 +45,7 @@ public class AttachmentService {
         String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/attachments/download/")
                 .path(attachment.getFileName()).toUriString();
 
-        return new AttachmentResponse(attachment.getId(), attachment.getOriginalFileName(), attachment.getFileType(),
+        return new AttachmentResponse(attachment.getId(), attachment.getFileName(), attachment.getOriginalFileName(), attachment.getFileType(),
                 attachment.getFileSize(), fileDownloadUri,
                 attachment.getTask() != null ? attachment.getTask().getId() : null,
                 attachment.getProject() != null ? attachment.getProject().getId() : null,

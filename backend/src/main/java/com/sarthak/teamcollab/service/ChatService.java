@@ -50,6 +50,7 @@ public class ChatService {
         message.setTask(task);
         message.setSender(user);
         message.setContent(content);
+        message.setSentAt(java.time.LocalDateTime.now());
         ChatMessage saved = chatMessageRepository.save(message);
         return mapToResponse(saved);
     }
