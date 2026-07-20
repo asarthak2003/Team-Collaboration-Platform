@@ -1,13 +1,27 @@
 package com.sarthak.teamcollab.service;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import com.sarthak.teamcollab.dto.ProjectRequest;
+import com.sarthak.teamcollab.dto.ProjectResponse;
+import com.sarthak.teamcollab.exception.BadRequestException;
+import com.sarthak.teamcollab.model.Project;
+import com.sarthak.teamcollab.model.Role;
+import com.sarthak.teamcollab.model.User;
+import com.sarthak.teamcollab.repository.ProjectRepository;
+import com.sarthak.teamcollab.repository.UserRepository;
+import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import com.sarthak.teamcollab.repository.ProjectRepository;
-
 @ExtendWith(MockitoExtension.class)
 public class ProjectServiceTest {
+
     @Mock
     private ProjectRepository projectRepository;
 
@@ -61,7 +75,7 @@ public class ProjectServiceTest {
     void updateProject_AsOwner_Success() {
         when(userRepository.findByEmail("pm1@test.com")).thenReturn(Optional.of(manager1));
         when(projectRepository.findByIdAndDeletedFalse(10L)).thenReturn(Optional.of(project1));
-        when(projectRepository.save(any(Project.class))).thenReturn(Optional.of(project1));
+        when(projectRepository.save(any(Project.class))).thenReturn(project1);
 
         ProjectRequest request = new ProjectRequest();
         request.setName("Updated Storesmith");
@@ -74,7 +88,7 @@ public class ProjectServiceTest {
     void UpdateProject_AsAdmin_Success() {
         when(userRepository.findByEmail("admin@test.com")).thenReturn(Optional.of(admin));
         when(projectRepository.findByIdAndDeletedFalse(10L)).thenReturn(Optional.of(project1));
-        when(projectRepository.save(any(Project.class))).thenReturn(Optional.of(project1));
+        when(projectRepository.save(any(Project.class))).thenReturn(project1);
 
         ProjectRequest request = new ProjectRequest();
         request.setName("Updated Storesmith");
@@ -83,4 +97,15 @@ public class ProjectServiceTest {
         verify(projectRepository, times(1)).save(project1);
     }
 
+    @Test
+    void updateProject_AsNonOwner_ThrowsBadRequestException() {
+        when(userRepository.findByEmail("pm2@test.com")).thenReturn(Optional.of(manager2));
+        when(projectRepository.findByIdAndDeletedFalse(10L)).thenReturn(Optional.of(project1));
+        ProjectRequest request = new ProjectRequest();
+        request.setName("Hacked StoreSmith");
+        assertThrows(BadRequestException.class, () -> {
+            projectService.updateProject(10L, request, "pm2@test.com");
+        });
+        verify(projectRepository, never()).save(any(Project.class));
+    }
 }
