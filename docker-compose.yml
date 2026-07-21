@@ -1,0 +1,26 @@
+name: collabra
+
+services:
+  # Spring Boot Backend Container
+  collabra-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: collabra-backend:latest
+    container_name: collabra-backend-container
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+
+  # React / Vite Frontend Container
+  collabra-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: collabra-frontend:latest
+    container_name: collabra-frontend-container
+    ports:
+      - "3000:80"
+    depends_on:
+      - collabra-backend
