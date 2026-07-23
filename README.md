@@ -78,6 +78,63 @@ graph TD
 
 ---
 
+## 💡 Use Cases
+* **Agile Software Teams:** Track sprints, attach architecture diagrams, and discuss bugs in real-time.
+* **Marketing Agencies:** Manage campaigns, upload creative assets to Cloudinary, and get approvals.
+* **Remote Startups:** A unified hub to replace disjointed task trackers and chat apps.
+
+---
+
+## 🛠️ Technology Stack
+
+### Frontend (User Interface)
+* **Core:** React 19, Vite
+* **Styling:** TailwindCSS, Lucide Icons
+* **Network & State:** Axios, React Hooks
+* **Real-time:** SockJS, STOMP.js
+* **Deployment:** Docker (Nginx Alpine), Vercel
+
+### Backend (REST API)
+* **Core:** Java 21, Spring Boot 3
+* **Security:** Spring Security, JWT Auth, BCrypt
+* **Database:** PostgreSQL (Neon Serverless DB), Spring Data JPA, Hibernate
+* **Storage:** Cloudinary SDK
+* **Deployment:** Docker (Eclipse Temurin JDK), Render
+
+---
+
+## 📂 Project Structure
+
+```text
+Collabra/
+├── backend/                       # Spring Boot Application
+│   ├── src/main/java/.../teamcollab/
+│   │   ├── config/                # Security, CORS, WebSocket, Storage Configs
+│   │   ├── controller/            # REST API Endpoints
+│   │   ├── dto/                   # Data Transfer Objects (Req/Res)
+│   │   ├── exception/             # Global Error Handling
+│   │   ├── model/                 # JPA Entities (User, Task, Project, etc.)
+│   │   ├── repository/            # Spring Data JPA Interfaces
+│   │   ├── security/              # JWT Filters & Providers
+│   │   └── service/               # Business Logic & Cloudinary Uploads
+│   ├── src/main/resources/        # application.properties
+│   └── Dockerfile                 # Backend Container Config
+│
+├── frontend/                      # React SPA
+│   ├── src/
+│   │   ├── components/            # UI Components (Kanban Board, Modals)
+│   │   ├── context/               # React Context (Auth State)
+│   │   ├── pages/                 # Route Views (Dashboard, Login, Projects)
+│   │   └── services/              # Axios API clients
+│   ├── index.html
+│   ├── tailwind.config.js
+│   └── Dockerfile                 # Frontend Nginx Container Config
+│
+└── docker-compose.yml             # Local Multi-Container Orchestration
+```
+
+---
+
 ## 📊 Core Database Schema (ERD)
 
 Collabra relies on a fully relational PostgreSQL database mapped via Spring Data JPA. Here is a high-level Entity Relationship Diagram:
@@ -160,6 +217,21 @@ Collabra takes security seriously, implementing defense-in-depth at multiple lay
 2. **Authorization:** Every incoming request is intercepted by the `JwtAuthenticationFilter`. If valid, the user's security context is populated.
 3. **Controller Security:** Endpoints are protected using `@PreAuthorize("hasRole('ADMIN')")` or custom logic to ensure users can only modify tasks they own or manage.
 4. **CORS Protection:** Cross-Origin Resource Sharing is strictly limited to the configured `CORS_ALLOWED_ORIGINS`, preventing unauthorized domains from interacting with the API.
+---
+
+## 🔑 Demo Credentials
+
+To test the application immediately (either locally or on your live URL) without registering new accounts, you can use these preconfigured test credentials mapping to the three core system roles:
+
+*   **Admin User** (Full platform read/write & deletion controls):
+    *   **Email:** `admin@admin.com`
+    *   **Password:** `admin`
+*   **Manager User** (Can create and manage tasks/projects):
+    *   **Email:** `manager1@manager1.com`
+    *   **Password:** `manager1`
+*   **Member User** (Standard task assignment, execution & comments):
+    *   **Email:** `member1@member1.com`
+    *   **Password:** `member1`
 
 ---
 
@@ -214,12 +286,12 @@ If you wish to run the frontend and backend separately for active development (h
 
 Collabra is configured for independent, scalable containerized deployment.
 
-**Backend (Render):**
+**Backend (e.g., Render, Railway, AWS ECS):**
 * Deploy using your custom built Docker image: `asarthak2003/collabra-backend:latest`
 * Ensure all environment variables are securely added to the platform's secret manager.
 * Expose port `8080`.
 
-**Frontend (Vercel):**
+**Frontend (e.g., Vercel, Netlify):**
 * Connect your GitHub repository directly to Vercel.
 * Build Command: `npm run build`
 * Output Directory: `dist`
@@ -227,6 +299,18 @@ Collabra is configured for independent, scalable containerized deployment.
 
 ---
 
+## 🤝 Contributing & Code of Conduct
+
+We welcome contributions from the community! To contribute to Collabra:
+1. **Fork the Repository:** Create your own branch (`git checkout -b feature/AmazingFeature`).
+2. **Follow Architecture:** Ensure backend code follows the Controller -> Service -> Repository pattern.
+3. **Test:** Run backend tests using `./mvnw test` before submitting.
+4. **Commit:** Write clean, descriptive commit messages.
+5. **Pull Request:** Open a PR against the `main` branch detailing your changes.
+
+Please treat all community members with respect. Harassment or abusive behavior will not be tolerated.
+
+---
 
 ## 🗺️ Roadmap
 * [ ] **Email Notifications:** Integrate JavaMailSender to alert users when they are assigned a new task.
