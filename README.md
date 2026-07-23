@@ -37,12 +37,12 @@ graph TD
     DB[(Neon PostgreSQL Serverless)]
     Cloudinary([Cloudinary CDN & Storage])
     end
-    Client ---|HTTPS / Static Assets| Nginx
-    Client ---|RESTful JSON| API
-    Client ---|WSS (WebSockets)| WS
+    Client ---|"HTTPS / Static Assets"| Nginx
+    Client ---|"RESTful JSON"| API
+    Client ---|"WSS (WebSockets)"| WS
     
-    API ---|JDBC (Hibernate/JPA)| DB
-    API -->|Upload Stream API| Cloudinary
+    API ---|"JDBC (Hibernate/JPA)"| DB
+    API -->|"Upload Stream API"| Cloudinary
 ```
 
 ---
