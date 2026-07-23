@@ -78,56 +78,6 @@ graph TD
 
 ---
 
-## 🛠️ Technology Stack
-
-### Frontend (User Interface)
-* **Core:** React 19, Vite
-* **Styling:** TailwindCSS, Lucide Icons
-* **Network & State:** Axios, React Hooks
-* **Real-time:** SockJS, STOMP.js
-* **Deployment:** Docker (Nginx Alpine), Vercel
-
-### Backend (REST API)
-* **Core:** Java 21, Spring Boot 3
-* **Security:** Spring Security, JWT Auth, BCrypt
-* **Database:** PostgreSQL (Neon Serverless DB), Spring Data JPA, Hibernate
-* **Storage:** Cloudinary SDK
-* **Deployment:** Docker (Eclipse Temurin JDK), Render
-
----
-
-## 📂 Project Structure
-
-```text
-Collabra/
-├── backend/                       # Spring Boot Application
-│   ├── src/main/java/.../teamcollab/
-│   │   ├── config/                # Security, CORS, WebSocket, Storage Configs
-│   │   ├── controller/            # REST API Endpoints
-│   │   ├── dto/                   # Data Transfer Objects (Req/Res)
-│   │   ├── exception/             # Global Error Handling
-│   │   ├── model/                 # JPA Entities (User, Task, Project, etc.)
-│   │   ├── repository/            # Spring Data JPA Interfaces
-│   │   ├── security/              # JWT Filters & Providers
-│   │   └── service/               # Business Logic & Cloudinary Uploads
-│   ├── src/main/resources/        # application.properties
-│   └── Dockerfile                 # Backend Container Config
-│
-├── frontend/                      # React SPA
-│   ├── src/
-│   │   ├── components/            # UI Components (Kanban Board, Modals)
-│   │   ├── context/               # React Context (Auth State)
-│   │   ├── pages/                 # Route Views (Dashboard, Login, Projects)
-│   │   └── services/              # Axios API clients
-│   ├── index.html
-│   ├── tailwind.config.js
-│   └── Dockerfile                 # Frontend Nginx Container Config
-│
-└── docker-compose.yml             # Local Multi-Container Orchestration
-```
-
----
-
 ## 📊 Core Database Schema (ERD)
 
 Collabra relies on a fully relational PostgreSQL database mapped via Spring Data JPA. Here is a high-level Entity Relationship Diagram:
@@ -186,34 +136,20 @@ To run Collabra successfully, you must configure the following environment varia
 
 ---
 
-## 📡 Key API Endpoints
+## 🔌 API Integration & WebSockets
 
-Here are some of the primary REST endpoints exposed by the backend:
+Collabra uses both traditional REST and real-time WebSockets to deliver a snappy experience.
 
-**Authentication**
-* `POST /api/auth/register` - Register a new user
-* `POST /api/auth/login` - Authenticate and receive a JWT token
-
-**Projects & Tasks**
-* `GET /api/projects` - Retrieve all authorized projects
-* `POST /api/projects` - Create a new project (Admin/Manager)
-* `GET /api/tasks/project/{projectId}` - Get tasks for a specific Kanban board
-* `PUT /api/tasks/{id}` - Update task status, assignee, or priority
-
-**Collaboration & Files**
-* `POST /api/tasks/{taskId}/comments` - Add a comment to a task
-* `GET /api/tasks/{taskId}/chat` - Fetch chat history for a task room
-* `POST /api/attachments/upload` - Upload a file to Cloudinary (Multipart)
-* `GET /api/attachments/download/{fileName}` - Secure file download
-
----
-
-## 🔌 WebSockets Implementation (STOMP)
-
-For real-time functionality, Collabra uses the STOMP protocol over SockJS.
+### WebSocket Broker (STOMP)
 * **Endpoint:** `/ws-chat`
 * **Topic Subscription:** Clients subscribe to `/topic/task/{taskId}` to listen for incoming messages specific to that task.
 * **Publishing:** Clients send JSON payloads to `/app/chat.sendMessage` which the Spring Boot `SimpMessagingTemplate` broadcasts to the relevant topic.
+
+### Key REST Endpoints
+* `POST /api/auth/login` - Authenticate and receive a JWT token (Bearer).
+* `GET /api/projects` - Retrieve all projects the authenticated user has access to.
+* `POST /api/attachments/upload?taskId={id}` - Expects `multipart/form-data`. Streams directly to Cloudinary.
+* `GET /api/tasks/{taskId}/chat` - Retrieves historical chat messages before the WebSocket connection takes over.
 
 ---
 
@@ -291,18 +227,6 @@ Collabra is configured for independent, scalable containerized deployment.
 
 ---
 
-## 🤝 Contributing & Code of Conduct
-
-We welcome contributions from the community! To contribute to Collabra:
-1. **Fork the Repository:** Create your own branch (`git checkout -b feature/AmazingFeature`).
-2. **Follow Architecture:** Ensure backend code follows the Controller -> Service -> Repository pattern.
-3. **Test:** Run backend tests using `./mvnw test` before submitting.
-4. **Commit:** Write clean, descriptive commit messages.
-5. **Pull Request:** Open a PR against the `main` branch detailing your changes.
-
-Please treat all community members with respect. Harassment or abusive behavior will not be tolerated.
-
----
 
 ## 🗺️ Roadmap
 * [ ] **Email Notifications:** Integrate JavaMailSender to alert users when they are assigned a new task.
