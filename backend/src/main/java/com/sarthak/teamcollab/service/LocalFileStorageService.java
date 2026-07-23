@@ -14,18 +14,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
-/**
- * Local filesystem implementation of the FileStorageService.
- * 
- * PRODUCTION DEPLOYMENT NOTE (e.g., AWS S3):
- * 1. For cloud environments like AWS ECS, AWS Elastic Beanstalk, or Kubernetes, 
- *    local filesystem storage is ephemeral (restarts and auto-scaling will delete files).
- * 2. To swap this for AWS S3:
- *    a. Implement a new class 'S3FileStorageService' that implements 'FileStorageService'.
- *    b. Use Amazon S3 Client library (software.amazon.awssdk:s3) to upload/download/delete blobs.
- *    c. Use Spring Profiles (e.g., @Profile("prod") on S3 vs @Profile("dev") on Local) 
- *       or use @Primary to dynamically swap implementations without breaking any controllers.
- */
+//Local filesystem implementation of the FileStorageService.
+
 @Service
 public class LocalFileStorageService implements FileStorageService {
     private final Path fileStorageLocation;
@@ -62,7 +52,8 @@ public class LocalFileStorageService implements FileStorageService {
         try {
             Path filePath = this.fileStorageLocation.resolve(fileName).normalize();
 
-            // Ensures that path remains inside base upload directory (prevents directory traversal attacks)
+            // Ensures that path remains inside base upload directory (prevents directory
+            // traversal attacks)
             if (!filePath.startsWith(this.fileStorageLocation)) {
                 throw new FileStorageException("Access Denied: File path is outside designated uploads directory");
             }

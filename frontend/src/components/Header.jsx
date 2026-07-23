@@ -103,7 +103,7 @@ function Header() {
     if (!user?.email) return;
 
     const stompClient = new Client({
-      webSocketFactory: () => new SockJS('http://localhost:8080/ws-chat'),
+      webSocketFactory: () => new SockJS((import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080') + '/ws-chat'),
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,

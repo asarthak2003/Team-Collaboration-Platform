@@ -43,8 +43,14 @@ public class AttachmentService {
     }
 
     private AttachmentResponse mapToResponse(Attachment attachment) {
-        String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/attachments/download/")
-                .path(attachment.getFileName()).toUriString();
+        String fileDownloadUri;
+        if (attachment.getFileName() != null && (attachment.getFileName().startsWith("http://")
+                || attachment.getFileName().startsWith("https://"))) {
+            fileDownloadUri = attachment.getFileName();
+        } else {
+            fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/api/attachments/download/")
+                    .path(attachment.getFileName()).toUriString();
+        }
 
         return new AttachmentResponse(attachment.getId(), attachment.getFileName(), attachment.getOriginalFileName(),
                 attachment.getFileType(),
